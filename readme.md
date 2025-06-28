@@ -1,4 +1,4 @@
-# Laravel TypeScript Enum Generator
+# TypeScript Enum Generator for Laravel
 
 Generate **runtime-usable** TypeScript enums from PHP Laravel enums. Unlike traditional TypeScript enums which are only available at compile-time, this package generates TypeScript code that provides both type safety and runtime functionality.
 
