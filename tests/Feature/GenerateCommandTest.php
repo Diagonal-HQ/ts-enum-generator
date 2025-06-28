@@ -94,8 +94,8 @@ class GenerateCommandTest extends TestCase
         ]);
 
         $indexContent = File::get('tests/output/index.ts');
-        
-        $this->assertStringContainsString('export { default as UserRole, UserRoleType, UserRoleUtils }', $indexContent);
-        $this->assertStringContainsString('export { default as Status, StatusType, StatusUtils }', $indexContent);
+
+        $this->assertStringContainsString('export { default as UserRole, type UserRoleType, UserRoleUtils }', $indexContent);
+        $this->assertStringContainsString('export { default as Status, type StatusType, StatusUtils }', $indexContent);
     }
 } 

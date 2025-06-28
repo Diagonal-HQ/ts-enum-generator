@@ -222,8 +222,8 @@ class GenerateCommand extends Command
                 ->replace('\\', '/');
                 
             $enumName = Str::of($relativePath)->afterLast('/')->studly();
-            
-            $indexContent .= "export { default as {$enumName}, {$enumName}Type, {$enumName}Utils } from './{$relativePath}';\n";
+
+            $indexContent .= "export { default as {$enumName}, type {$enumName}Type, {$enumName}Utils } from './{$relativePath}';\n";
         }
         
         File::ensureDirectoryExists(dirname($indexPath));
