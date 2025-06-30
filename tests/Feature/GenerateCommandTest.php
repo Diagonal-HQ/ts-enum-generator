@@ -105,8 +105,8 @@ class GenerateCommandTest extends TestCase
     public function itUsesTheConfiguredSourceAndDestinationIfNoneAreProvided()
     {
         // Given
-        Config::set('ts-enums.source', 'tests/fixtures/enums');
-        Config::set('ts-enums.destination', 'tests/output');
+        Config::set('ts-enum-generator.default_source_dir', 'tests/fixtures/enums');
+        Config::set('ts-enum-generator.default_destination_dir', 'tests/output/somewhere');
 
         // When
         $this->artisan('ts-enums:generate')
@@ -115,8 +115,8 @@ class GenerateCommandTest extends TestCase
              ->assertExitCode(0);
 
         // Then
-        $this->assertTrue(File::exists('tests/output/user-role.ts'));
-        $this->assertTrue(File::exists('tests/output/status.ts'));
-        $this->assertTrue(File::exists('tests/output/index.ts'));
+        $this->assertTrue(File::exists('tests/output/somewhere/user-role.ts'));
+        $this->assertTrue(File::exists('tests/output/somewhere/status.ts'));
+        $this->assertTrue(File::exists('tests/output/somewhere/index.ts'));
     }
 }
