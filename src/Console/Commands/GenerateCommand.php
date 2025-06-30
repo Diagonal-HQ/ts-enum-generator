@@ -12,9 +12,9 @@ use Symfony\Component\Finder\SplFileInfo;
 
 class GenerateCommand extends Command
 {
-    protected $signature = 'ts-enums:generate 
-                           {--source=app/Enums : Source directory containing PHP enums}
-                           {--destination=resources/ts/enums : Destination directory for TypeScript files}
+    protected $signature = 'ts-enum:generate
+                           {--source= : Source directory for PHP enums}
+                           {--destination= : Destination directory for TypeScript files}
                            {--watch : Watch for changes and regenerate automatically}';
     
     protected $description = 'Generate runtime-usable TypeScript enums from PHP enums';
@@ -37,9 +37,9 @@ class GenerateCommand extends Command
 
     private function setOptions(): void
     {
-        $this->sourceDir = $this->option('source');
-        $this->destinationDir = $this->option('destination');
-        
+        $this->sourceDir = $this->option('source') ?: config('ts-enum-generator.default_source_dir');
+        $this->destinationDir = $this->option('destination') ?: config('ts-enum-generator.default_destination_dir');
+
         // Convert relative paths to absolute for proper resolution
         if (!str_starts_with($this->sourceDir, '/')) {
             $this->sourceDir = getcwd() . '/' . $this->sourceDir;
