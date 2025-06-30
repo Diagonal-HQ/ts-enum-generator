@@ -12,7 +12,7 @@ use Symfony\Component\Finder\SplFileInfo;
 
 class GenerateCommand extends Command
 {
-    protected $signature = 'ts-enum:generate
+    protected $signature = 'ts-enums:generate
                            {--source= : Source directory for PHP enums}
                            {--destination= : Destination directory for TypeScript files}
                            {--watch : Watch for changes and regenerate automatically}';
