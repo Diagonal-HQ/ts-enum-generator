@@ -92,23 +92,25 @@ class GenerateCommandTest extends TestCase
         $this->assertStringNotContainsString('declare namespace', $enumsContent);
         
         // Check UserRole type definition with export
-        $this->assertStringContainsString('export type DiagonalTsEnumGeneratorTestsFixturesUserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
+        $this->assertStringContainsString('export type UserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
         
         // Check UserRole runtime object with export
-        $this->assertStringContainsString('export const DiagonalTsEnumGeneratorTestsFixturesUserRole = {', $enumsContent);
+        $this->assertStringContainsString('export const UserRole = {', $enumsContent);
         $this->assertStringContainsString('ADMIN: \'admin\' as const,', $enumsContent);
         
         // Check UserRole utilities with export
-        $this->assertStringContainsString('export const DiagonalTsEnumGeneratorTestsFixturesUserRoleUtils = {', $enumsContent);
-        $this->assertStringContainsString('isValid: (value: any): value is DiagonalTsEnumGeneratorTestsFixturesUserRole', $enumsContent);
+        $this->assertStringContainsString('export const UserRoleUtils = {', $enumsContent);
+        $this->assertStringContainsString('isValid: (value: any): value is UserRole', $enumsContent);
         
         // Check Status type definition with export
-        $this->assertStringContainsString('export type DiagonalTsEnumGeneratorTestsFixturesStatus = \'PENDING\' | \'APPROVED\' | \'REJECTED\' | \'CANCELLED\';', $enumsContent);
+        $this->assertStringContainsString('export type Status = \'PENDING\' | \'APPROVED\' | \'REJECTED\' | \'CANCELLED\';', $enumsContent);
         
         // Check generic utilities with export
         $this->assertStringContainsString('export const EnumUtils = {', $enumsContent);
         $this->assertStringContainsString('isValid: <T extends Record<string, string>>(enumObject: T, value: any): value is T[keyof T]', $enumsContent);
     }
+
+
 
     #[Test]
     public function it_generates_only_types_when_types_only_is_enabled()

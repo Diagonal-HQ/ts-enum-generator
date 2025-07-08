@@ -561,24 +561,6 @@ class GenerateCommand extends Command
 
     private function getPrefixedEnumName(array $enumData): string
     {
-        $enumName = $enumData['name'];
-        $namespace = $enumData['namespace'];
-        
-        // If namespace is empty or just "Enums", return the original name
-        if (empty($namespace) || $namespace === 'Enums') {
-            return $enumName;
-        }
-        
-        // Convert namespace to camelCase prefix
-        $namespaceParts = explode(config('ts-enum-generator.output.namespace_separator'), $namespace);
-        $prefix = '';
-        
-        foreach ($namespaceParts as $part) {
-            if ($part !== 'Enums') {
-                $prefix .= ucfirst($part);
-            }
-        }
-        
-        return $prefix . $enumName;
+        return $enumData['name'];
     }
 } 
