@@ -94,8 +94,12 @@ class GenerateCommand extends Command
             }
         }
         
-        // Generate single TypeScript file with all enums
-        $this->generateSingleTypeScriptFile();
+        // Generate TypeScript files based on configuration
+        if (config('ts-enum-generator.output.single_file', true)) {
+            $this->generateSingleTypeScriptFile();
+        } else {
+            $this->generateMultipleTypeScriptFiles();
+        }
     }
 
     private function isEnumFile(SplFileInfo $phpEnumFile): bool
@@ -169,6 +173,43 @@ class GenerateCommand extends Command
         File::put($outputPath, $content);
         
         $this->line("Generated: {$outputPath}");
+    }
+
+    private function generateMultipleTypeScriptFiles(): void
+    {
+        if (empty($this->collectedEnums)) {
+            return;
+        }
+        
+        File::ensureDirectoryExists($this->destinationDir);
+        
+        foreach ($this->collectedEnums as $enumData) {
+            $filename = $enumData['name'] . '.ts';
+            $outputPath = $this->destinationDir . '/' . $filename;
+            
+            // Convert relative destination path to absolute if needed
+            if (!str_starts_with($outputPath, '/')) {
+                $outputPath = getcwd() . '/' . $outputPath;
+            }
+            
+            $content = $this->generateIndividualFileContent($enumData);
+            
+            File::put($outputPath, $content);
+            $this->line("Generated: {$outputPath}");
+        }
+    }
+
+    private function generateIndividualFileContent(array $enumData): string
+    {
+        $output = '';
+        
+        if (config('ts-enum-generator.output.include_comments')) {
+            $output .= "// Auto-generated TypeScript enum from PHP enum\n\n";
+        }
+        
+        $output .= $this->generateEnumDefinition($enumData);
+        
+        return $output;
     }
 
     private function generateNamespacedContent(): string
