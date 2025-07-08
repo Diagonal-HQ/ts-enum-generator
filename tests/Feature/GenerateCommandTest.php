@@ -111,6 +111,40 @@ class GenerateCommandTest extends TestCase
     }
 
     #[Test]
+    public function it_generates_correct_typescript_with_es_modules()
+    {
+        config(['ts-enum-generator.output.use_namespaces' => false]);
+        
+        $this->artisan('ts-enums:generate', [
+            '--source' => 'tests/fixtures/enums',
+            '--destination' => 'tests/output'
+        ]);
+
+        $enumsContent = File::get('tests/output/enums.ts');
+        
+        // Check that no namespace declaration is present
+        $this->assertStringNotContainsString('declare namespace', $enumsContent);
+        
+        // Check UserRole type definition with export
+        $this->assertStringContainsString('export type DiagonalTsEnumGeneratorTestsFixturesUserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
+        
+        // Check UserRole runtime object with export
+        $this->assertStringContainsString('export const DiagonalTsEnumGeneratorTestsFixturesUserRole = {', $enumsContent);
+        $this->assertStringContainsString('ADMIN: \'admin\' as const,', $enumsContent);
+        
+        // Check UserRole utilities with export
+        $this->assertStringContainsString('export const DiagonalTsEnumGeneratorTestsFixturesUserRoleUtils = {', $enumsContent);
+        $this->assertStringContainsString('isValid: (value: any): value is DiagonalTsEnumGeneratorTestsFixturesUserRole', $enumsContent);
+        
+        // Check Status type definition with export
+        $this->assertStringContainsString('export type DiagonalTsEnumGeneratorTestsFixturesStatus = \'PENDING\' | \'APPROVED\' | \'REJECTED\' | \'CANCELLED\';', $enumsContent);
+        
+        // Check generic utilities with export
+        $this->assertStringContainsString('export const EnumUtils = {', $enumsContent);
+        $this->assertStringContainsString('isValid: <T extends Record<string, string>>(enumObject: T, value: any): value is T[keyof T]', $enumsContent);
+    }
+
+    #[Test]
     public function it_generates_only_types_when_types_only_is_enabled()
     {
         config(['ts-enum-generator.output.types_only' => true]);
