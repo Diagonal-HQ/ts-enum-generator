@@ -25,20 +25,6 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Naming Conventions
-    |--------------------------------------------------------------------------
-    |
-    | Configure how directory and file names should be converted.
-    | Available options: 'kebab', 'snake', 'camel', 'studly', 'lower'
-    |
-    */
-    'convention' => [
-        'directories' => 'kebab',
-        'files' => 'kebab',
-    ],
-
-    /*
-    |--------------------------------------------------------------------------
     | Output Options
     |--------------------------------------------------------------------------
     |
@@ -46,10 +32,29 @@ return [
     |
     */
     'output' => [
-        'generate_index_file' => true,
-        'generate_utils' => true,
-        'use_const_assertions' => true,
+        'use_namespaces' => true,
+        'single_file' => true,
+        'output_filename' => 'enums.ts',
+        'namespace_separator' => '.',
         'include_comments' => true,
+        'generate_runtime_objects' => true,
+        'generate_per_type_utils' => true,
+        'generate_generic_utils' => true,
+        'types_only' => false, // If true, only generates type definitions
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Namespace Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configure how PHP namespaces are mapped to TypeScript namespaces.
+    |
+    */
+    'namespace' => [
+        'root_namespace' => null, // If null, uses the first namespace part
+        'strip_namespace_prefix' => null, // Strip this prefix from PHP namespaces
+        'namespace_suffix' => 'Enums', // Add this suffix to namespace
     ],
 
     /*
