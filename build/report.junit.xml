@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <testsuites>
-  <testsuite name="/Users/branick/Code/ts-enum-generator/phpunit.xml" tests="4" assertions="17" errors="0" failures="0" skipped="0" time="0.126511">
-    <testsuite name="Diagonal Test Suite" tests="4" assertions="17" errors="0" failures="0" skipped="0" time="0.126511">
-      <testsuite name="Diagonal\TsEnumGenerator\Tests\Feature\GenerateCommandTest" file="/Users/branick/Code/ts-enum-generator/tests/Feature/GenerateCommandTest.php" tests="4" assertions="17" errors="0" failures="0" skipped="0" time="0.126511">
-        <testcase name="it_generates_index_file_with_all_exports" file="/Users/branick/Code/ts-enum-generator/tests/Feature/GenerateCommandTest.php" line="89" class="Diagonal\TsEnumGenerator\Tests\Feature\GenerateCommandTest" classname="Diagonal.TsEnumGenerator.Tests.Feature.GenerateCommandTest" assertions="2" time="0.111831"/>
-        <testcase name="it_generates_correct_typescript_for_pure_enum" file="/Users/branick/Code/ts-enum-generator/tests/Feature/GenerateCommandTest.php" line="71" class="Diagonal\TsEnumGenerator\Tests\Feature\GenerateCommandTest" classname="Diagonal.TsEnumGenerator.Tests.Feature.GenerateCommandTest" assertions="3" time="0.003782"/>
-        <testcase name="it_generates_correct_typescript_for_backed_enum" file="/Users/branick/Code/ts-enum-generator/tests/Feature/GenerateCommandTest.php" line="48" class="Diagonal\TsEnumGenerator\Tests\Feature\GenerateCommandTest" classname="Diagonal.TsEnumGenerator.Tests.Feature.GenerateCommandTest" assertions="6" time="0.003095"/>
-        <testcase name="it_can_generate_typescript_enums_from_php_enums" file="/Users/branick/Code/ts-enum-generator/tests/Feature/GenerateCommandTest.php" line="31" class="Diagonal\TsEnumGenerator\Tests\Feature\GenerateCommandTest" classname="Diagonal.TsEnumGenerator.Tests.Feature.GenerateCommandTest" assertions="6" time="0.007803"/>
+  <testsuite name="/Users/branick/Code/ts-enum-generator/phpunit.xml" tests="1" assertions="6" errors="0" failures="0" skipped="0" time="0.055481">
+    <testsuite name="Diagonal Test Suite" tests="1" assertions="6" errors="0" failures="0" skipped="0" time="0.055481">
+      <testsuite name="Diagonal\TsEnumGenerator\Tests\Feature\GenerateCommandTest" file="/Users/branick/Code/ts-enum-generator/tests/Feature/GenerateCommandTest.php" tests="1" assertions="6" errors="0" failures="0" skipped="0" time="0.055481">
+        <testcase name="it_supports_glob_patterns_for_multiple_directories" file="/Users/branick/Code/ts-enum-generator/tests/Feature/GenerateCommandTest.php" line="123" class="Diagonal\TsEnumGenerator\Tests\Feature\GenerateCommandTest" classname="Diagonal.TsEnumGenerator.Tests.Feature.GenerateCommandTest" assertions="6" time="0.055481"/>
       </testsuite>
     </testsuite>
   </testsuite>

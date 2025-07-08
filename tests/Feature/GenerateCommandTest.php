@@ -4,6 +4,7 @@ namespace Diagonal\TsEnumGenerator\Tests\Feature;
 
 use Diagonal\TsEnumGenerator\Tests\TestCase;
 use Illuminate\Support\Facades\File;
+use PHPUnit\Framework\Attributes\Test;
 
 class GenerateCommandTest extends TestCase
 {
@@ -27,7 +28,7 @@ class GenerateCommandTest extends TestCase
         parent::tearDown();
     }
 
-    /** @test */
+    #[Test]
     public function it_can_generate_typescript_enums_from_php_enums()
     {
         $this->artisan('ts-enums:generate', [
@@ -44,7 +45,7 @@ class GenerateCommandTest extends TestCase
         $this->assertTrue(File::exists('tests/output/index.ts'));
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_correct_typescript_for_backed_enum()
     {
         $this->artisan('ts-enums:generate', [
@@ -67,7 +68,7 @@ class GenerateCommandTest extends TestCase
         $this->assertStringContainsString('isValid: (value: any): value is UserRoleType', $userRoleContent);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_correct_typescript_for_pure_enum()
     {
         $this->artisan('ts-enums:generate', [
@@ -85,7 +86,7 @@ class GenerateCommandTest extends TestCase
         $this->assertStringContainsString('APPROVED: \'APPROVED\' as const,', $statusContent);
     }
 
-    /** @test */
+    #[Test]
     public function it_generates_index_file_with_all_exports()
     {
         $this->artisan('ts-enums:generate', [
@@ -97,5 +98,56 @@ class GenerateCommandTest extends TestCase
 
         $this->assertStringContainsString('export { default as UserRole, type UserRoleType, UserRoleUtils }', $indexContent);
         $this->assertStringContainsString('export { default as Status, type StatusType, StatusUtils }', $indexContent);
+    }
+
+    #[Test]
+    public function it_uses_config_defaults_when_no_options_provided()
+    {
+        // Set up config defaults
+        config(['ts-enum-generator.default_source_dir' => 'tests/fixtures/enums']);
+        config(['ts-enum-generator.default_destination_dir' => 'tests/output']);
+        
+        // Run command without options
+        $this->artisan('ts-enums:generate')
+            ->expectsOutput('Generating runtime-usable TypeScript enums...')
+            ->expectsOutput('TypeScript enums generated successfully.')
+            ->assertExitCode(0);
+
+        // Check that files were generated using config defaults
+        $this->assertTrue(File::exists('tests/output/user-role.ts'));
+        $this->assertTrue(File::exists('tests/output/status.ts'));
+        $this->assertTrue(File::exists('tests/output/index.ts'));
+    }
+
+    #[Test]
+    public function it_supports_glob_patterns_for_multiple_directories()
+    {
+        // Create multiple test directories
+        File::makeDirectory('tests/fixtures/module1/enums', 0755, true);
+        File::makeDirectory('tests/fixtures/module2/enums', 0755, true);
+        
+        // Copy existing enum files to multiple directories
+        File::copy('tests/fixtures/enums/UserRole.php', 'tests/fixtures/module1/enums/UserRole.php');
+        File::copy('tests/fixtures/enums/Status.php', 'tests/fixtures/module2/enums/Status.php');
+        
+        try {
+            // Test glob pattern
+            $this->artisan('ts-enums:generate', [
+                '--source' => 'tests/fixtures/*/enums',
+                '--destination' => 'tests/output'
+            ])
+            ->expectsOutput('Generating runtime-usable TypeScript enums...')
+            ->expectsOutput('TypeScript enums generated successfully.')
+            ->assertExitCode(0);
+
+            // Check that files were generated from both directories
+            $this->assertTrue(File::exists('tests/output/user-role.ts'));
+            $this->assertTrue(File::exists('tests/output/status.ts'));
+            $this->assertTrue(File::exists('tests/output/index.ts'));
+        } finally {
+            // Clean up test directories
+            File::deleteDirectory('tests/fixtures/module1');
+            File::deleteDirectory('tests/fixtures/module2');
+        }
     }
 } 
