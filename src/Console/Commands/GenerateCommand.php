@@ -167,7 +167,12 @@ class GenerateCommand extends Command
             $outputPath = getcwd() . '/' . $outputPath;
         }
         
-        $content = $this->generateNamespacedContent();
+        // Check if we should use namespaces or ES modules
+        if (config('ts-enum-generator.output.use_namespaces', true)) {
+            $content = $this->generateNamespacedContent();
+        } else {
+            $content = $this->generateESModuleContent();
+        }
         
         File::ensureDirectoryExists(dirname($outputPath));
         File::put($outputPath, $content);
@@ -207,41 +212,13 @@ class GenerateCommand extends Command
             $output .= "// Auto-generated TypeScript enum from PHP enum\n\n";
         }
         
-        $output .= $this->generateEnumDefinition($enumData);
+        // Individual files should use unprefixed names since each enum is in its own file
+        $output .= $this->generateIndividualEnumDefinition($enumData);
         
         return $output;
     }
 
-    private function generateNamespacedContent(): string
-    {
-        $groupedEnums = $this->groupEnumsByNamespace();
-        $output = '';
-        
-        if (config('ts-enum-generator.output.include_comments')) {
-            $output .= "// Auto-generated TypeScript enums from PHP enums\n\n";
-        }
-        
-        foreach ($groupedEnums as $namespace => $enums) {
-            $output .= "declare namespace {$namespace} {\n";
-            
-            foreach ($enums as $enumData) {
-                $output .= $this->generateEnumDefinition($enumData);
-            }
-            
-            // Generate generic utilities if enabled
-            if (config('ts-enum-generator.output.generate_generic_utils') && 
-                config('ts-enum-generator.output.generate_runtime_objects') &&
-                !config('ts-enum-generator.output.types_only')) {
-                $output .= $this->generateGenericUtilities($enums);
-            }
-            
-            $output .= "}\n";
-        }
-        
-        return $output;
-    }
-
-    private function generateEnumDefinition(array $enumData): string
+    private function generateIndividualEnumDefinition(array $enumData): string
     {
         $enumName = $enumData['name'];
         $cases = $enumData['cases'];
@@ -263,14 +240,14 @@ class GenerateCommand extends Command
         // Generate runtime objects if enabled
         if (config('ts-enum-generator.output.generate_runtime_objects') && 
             !config('ts-enum-generator.output.types_only')) {
-            $output .= $this->generateRuntimeObject($enumData);
+            $output .= $this->generateIndividualRuntimeObject($enumData);
         }
         
         // Generate per-type utilities if enabled
         if (config('ts-enum-generator.output.generate_per_type_utils') && 
             config('ts-enum-generator.output.generate_runtime_objects') &&
             !config('ts-enum-generator.output.types_only')) {
-            $output .= $this->generatePerTypeUtilities($enumData);
+            $output .= $this->generateIndividualPerTypeUtilities($enumData);
         }
         
         $output .= "\n";
@@ -278,7 +255,7 @@ class GenerateCommand extends Command
         return $output;
     }
 
-    private function generateRuntimeObject(array $enumData): string
+    private function generateIndividualRuntimeObject(array $enumData): string
     {
         $enumName = $enumData['name'];
         $cases = $enumData['cases'];
@@ -300,7 +277,7 @@ class GenerateCommand extends Command
         return $output;
     }
 
-    private function generatePerTypeUtilities(array $enumData): string
+    private function generateIndividualPerTypeUtilities(array $enumData): string
     {
         $enumName = $enumData['name'];
         
@@ -315,7 +292,219 @@ class GenerateCommand extends Command
         return $output;
     }
 
-    private function generateGenericUtilities(array $enums): string
+    private function generateNamespacedContent(): string
+    {
+        $groupedEnums = $this->groupEnumsByNamespace();
+        $output = '';
+        
+        if (config('ts-enum-generator.output.include_comments')) {
+            $output .= "// Auto-generated TypeScript enums from PHP enums\n\n";
+        }
+        
+        foreach ($groupedEnums as $namespace => $enums) {
+            $output .= "declare namespace {$namespace} {\n";
+            
+            foreach ($enums as $enumData) {
+                $output .= $this->generateNamespaceEnumDefinition($enumData);
+            }
+            
+            // Generate generic utilities if enabled
+            if (config('ts-enum-generator.output.generate_generic_utils') && 
+                config('ts-enum-generator.output.generate_runtime_objects') &&
+                !config('ts-enum-generator.output.types_only')) {
+                $output .= $this->generateNamespaceGenericUtilities($enums);
+            }
+            
+            $output .= "}\n";
+        }
+        
+        return $output;
+    }
+
+    private function generateESModuleContent(): string
+    {
+        $output = '';
+        
+        if (config('ts-enum-generator.output.include_comments')) {
+            $output .= "// Auto-generated TypeScript enums from PHP enums\n\n";
+        }
+        
+        foreach ($this->collectedEnums as $enumData) {
+            $output .= $this->generateESModuleEnumDefinition($enumData);
+        }
+        
+        // Generate generic utilities if enabled
+        if (config('ts-enum-generator.output.generate_generic_utils') && 
+            config('ts-enum-generator.output.generate_runtime_objects') &&
+            !config('ts-enum-generator.output.types_only')) {
+            $output .= $this->generateESModuleGenericUtilities();
+        }
+        
+        return $output;
+    }
+
+    private function generateNamespaceEnumDefinition(array $enumData): string
+    {
+        $enumName = $enumData['name'];
+        $cases = $enumData['cases'];
+        $output = '';
+        
+        // Generate the type definition
+        $typeValues = [];
+        foreach ($cases as $case) {
+            if ($this->isBackedEnum($case)) {
+                $value = $case->value;
+                $typeValues[] = "'" . addslashes($value) . "'";
+            } else {
+                $typeValues[] = "'" . $case->name . "'";
+            }
+        }
+        
+        $output .= "  type {$enumName} = " . implode(' | ', $typeValues) . ";\n";
+        
+        // Generate runtime objects if enabled - as ambient declarations
+        if (config('ts-enum-generator.output.generate_runtime_objects') && 
+            !config('ts-enum-generator.output.types_only')) {
+            $output .= $this->generateNamespaceRuntimeObject($enumData);
+        }
+        
+        // Generate per-type utilities if enabled - as ambient declarations
+        if (config('ts-enum-generator.output.generate_per_type_utils') && 
+            config('ts-enum-generator.output.generate_runtime_objects') &&
+            !config('ts-enum-generator.output.types_only')) {
+            $output .= $this->generateNamespacePerTypeUtilities($enumData);
+        }
+        
+        $output .= "\n";
+        
+        return $output;
+    }
+
+    private function generateESModuleEnumDefinition(array $enumData): string
+    {
+        $enumName = $this->getPrefixedEnumName($enumData);
+        $cases = $enumData['cases'];
+        $output = '';
+        
+        // Generate the type definition
+        $typeValues = [];
+        foreach ($cases as $case) {
+            if ($this->isBackedEnum($case)) {
+                $value = $case->value;
+                $typeValues[] = "'" . addslashes($value) . "'";
+            } else {
+                $typeValues[] = "'" . $case->name . "'";
+            }
+        }
+        
+        $output .= "export type {$enumName} = " . implode(' | ', $typeValues) . ";\n";
+        
+        // Generate runtime objects if enabled
+        if (config('ts-enum-generator.output.generate_runtime_objects') && 
+            !config('ts-enum-generator.output.types_only')) {
+            $output .= $this->generateESModuleRuntimeObject($enumData);
+        }
+        
+        // Generate per-type utilities if enabled
+        if (config('ts-enum-generator.output.generate_per_type_utils') && 
+            config('ts-enum-generator.output.generate_runtime_objects') &&
+            !config('ts-enum-generator.output.types_only')) {
+            $output .= $this->generateESModulePerTypeUtilities($enumData);
+        }
+        
+        $output .= "\n";
+        
+        return $output;
+    }
+
+    private function generateNamespaceRuntimeObject(array $enumData): string
+    {
+        $enumName = $enumData['name'];
+        $cases = $enumData['cases'];
+        
+        $output = "\n  const {$enumName}: {\n";
+        
+        foreach ($cases as $case) {
+            if ($this->isBackedEnum($case)) {
+                $value = $case->value;
+                $output .= "    readonly " . $case->name . ": '" . addslashes($value) . "';\n";
+            } else {
+                $name = $case->name;
+                $output .= "    readonly " . $name . ": '" . $name . "';\n";
+            }
+        }
+        
+        $output .= "  };\n";
+        
+        return $output;
+    }
+
+    private function generateESModuleRuntimeObject(array $enumData): string
+    {
+        $enumName = $this->getPrefixedEnumName($enumData);
+        $cases = $enumData['cases'];
+        
+        $output = "\nexport const {$enumName} = {\n";
+        
+        foreach ($cases as $case) {
+            if ($this->isBackedEnum($case)) {
+                $value = $case->value;
+                $output .= "  " . $case->name . ": '" . addslashes($value) . "' as const,\n";
+            } else {
+                $name = $case->name;
+                $output .= "  " . $name . ": '" . $name . "' as const,\n";
+            }
+        }
+        
+        $output .= "} as const;\n";
+        
+        return $output;
+    }
+
+    private function generateNamespacePerTypeUtilities(array $enumData): string
+    {
+        $enumName = $enumData['name'];
+        
+        $output = "\n  const {$enumName}Utils: {\n";
+        $output .= "    values: {$enumName}[];\n";
+        $output .= "    keys: (keyof typeof {$enumName})[];\n";
+        $output .= "    entries: [keyof typeof {$enumName}, {$enumName}][];\n";
+        $output .= "    isValid: (value: any) => value is {$enumName};\n";
+        $output .= "    fromKey: (key: keyof typeof {$enumName}) => {$enumName};\n";
+        $output .= "  };\n";
+        
+        return $output;
+    }
+
+    private function generateESModulePerTypeUtilities(array $enumData): string
+    {
+        $enumName = $this->getPrefixedEnumName($enumData);
+        
+        $output = "\nexport const {$enumName}Utils = {\n";
+        $output .= "  values: Object.values({$enumName}),\n";
+        $output .= "  keys: Object.keys({$enumName}) as Array<keyof typeof {$enumName}>,\n";
+        $output .= "  entries: Object.entries({$enumName}) as Array<[keyof typeof {$enumName}, {$enumName}]>,\n";
+        $output .= "  isValid: (value: any): value is {$enumName} => Object.values({$enumName}).includes(value),\n";
+        $output .= "  fromKey: (key: keyof typeof {$enumName}): {$enumName} => {$enumName}[key],\n";
+        $output .= "};\n";
+        
+        return $output;
+    }
+
+    private function generateNamespaceGenericUtilities(array $enums): string
+    {
+        $output = "\n  const EnumUtils: {\n";
+        $output .= "    isValid: <T extends Record<string, string>>(enumObject: T, value: any) => value is T[keyof T];\n";
+        $output .= "    values: <T extends Record<string, string>>(enumObject: T) => T[keyof T][];\n";
+        $output .= "    keys: <T extends Record<string, string>>(enumObject: T) => (keyof T)[];\n";
+        $output .= "    entries: <T extends Record<string, string>>(enumObject: T) => [keyof T, T[keyof T]][];\n";
+        $output .= "    fromKey: <T extends Record<string, string>>(enumObject: T, key: keyof T) => T[keyof T];\n";
+        $output .= "  };\n";
+        
+        return $output;
+    }
+
+    private function generateESModuleGenericUtilities(): string
     {
         $output = "\nexport const EnumUtils = {\n";
         $output .= "  isValid: <T extends Record<string, string>>(enumObject: T, value: any): value is T[keyof T] => {\n";
@@ -368,5 +557,28 @@ class GenerateCommand extends Command
     private function isBackedEnum(object $caseObject): bool
     {
         return $caseObject instanceof \BackedEnum;
+    }
+
+    private function getPrefixedEnumName(array $enumData): string
+    {
+        $enumName = $enumData['name'];
+        $namespace = $enumData['namespace'];
+        
+        // If namespace is empty or just "Enums", return the original name
+        if (empty($namespace) || $namespace === 'Enums') {
+            return $enumName;
+        }
+        
+        // Convert namespace to camelCase prefix
+        $namespaceParts = explode(config('ts-enum-generator.output.namespace_separator'), $namespace);
+        $prefix = '';
+        
+        foreach ($namespaceParts as $part) {
+            if ($part !== 'Enums') {
+                $prefix .= ucfirst($part);
+            }
+        }
+        
+        return $prefix . $enumName;
     }
 } 
