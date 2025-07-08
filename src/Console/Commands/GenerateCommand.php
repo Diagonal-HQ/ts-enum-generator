@@ -21,6 +21,7 @@ class GenerateCommand extends Command
     
     protected array $sourceDirectories;
     protected string $destinationDir;
+    protected array $collectedEnums = [];
 
     public function handle(): void
     {
@@ -70,7 +71,7 @@ class GenerateCommand extends Command
 
     private function generate(): void
     {
-        $generatedFiles = [];
+        $this->collectedEnums = [];
         
         foreach ($this->sourceDirectories as $sourceDir) {
             $phpEnumFiles = File::allFiles($sourceDir);
@@ -81,13 +82,11 @@ class GenerateCommand extends Command
                         continue;
                     }
                     
-                    $tsEnumFilePath = $this->getTsEnumFilePathFrom($phpEnumFile, $sourceDir);
-                    $tsEnumFileContent = $this->generateTsEnumContentFrom($phpEnumFile);
+                    $enumData = $this->extractEnumData($phpEnumFile);
                     
-                    if ($tsEnumFileContent) {
-                        $this->createTsEnumFile($tsEnumFilePath, $tsEnumFileContent);
-                        $generatedFiles[] = $tsEnumFilePath;
-                        $this->line("Generated: {$tsEnumFilePath}");
+                    if ($enumData) {
+                        $this->collectedEnums[] = $enumData;
+                        $this->line("Processed: {$enumData['name']}");
                     }
                 } catch (Exception $exception) {
                     $this->warn("Failed to process {$phpEnumFile->getFilename()}: {$exception->getMessage()}");
@@ -95,8 +94,12 @@ class GenerateCommand extends Command
             }
         }
         
-        // Generate index file with all exports
-        $this->generateIndexFile($generatedFiles);
+        // Generate TypeScript files based on configuration
+        if (config('ts-enum-generator.output.single_file', true)) {
+            $this->generateSingleTypeScriptFile();
+        } else {
+            $this->generateMultipleTypeScriptFiles();
+        }
     }
 
     private function isEnumFile(SplFileInfo $phpEnumFile): bool
@@ -105,33 +108,7 @@ class GenerateCommand extends Command
         return preg_match('/enum\s+\w+/', $contents);
     }
 
-    private function getTsEnumFilePathFrom(SplFileInfo $phpEnumFile, string $sourceDir): string
-    {
-        $directoriesConvention = config('ts-enum-generator.convention.directories', 'kebab');
-        $filesConvention = config('ts-enum-generator.convention.files', 'kebab');
-        
-        $dirPath = Str::of($phpEnumFile->getPath())
-            ->replace('\\', '/')
-            ->after($sourceDir)
-            ->trim('/')
-            ->explode('/')
-            ->filter()
-            ->map(fn ($directory) => Str::$directoriesConvention($directory))
-            ->join('/');
-            
-        $fileName = Str::$filesConvention($phpEnumFile->getFilenameWithoutExtension());
-        
-        $fullPath = $dirPath ? "{$this->destinationDir}/{$dirPath}/{$fileName}.ts" : "{$this->destinationDir}/{$fileName}.ts";
-        
-        // Convert relative destination path to absolute if needed
-        if (!str_starts_with($fullPath, '/')) {
-            $fullPath = getcwd() . '/' . $fullPath;
-        }
-        
-        return $fullPath;
-    }
-
-    private function generateTsEnumContentFrom(SplFileInfo $phpEnumFile): ?string
+    private function extractEnumData(SplFileInfo $phpEnumFile): ?array
     {
         $phpEnumClassName = $this->getClassNameFrom($phpEnumFile);
         
@@ -143,59 +120,237 @@ class GenerateCommand extends Command
             return null;
         }
         
-        $enumName = (new ReflectionClass($phpEnumClassName))->getShortName();
+        $reflection = new ReflectionClass($phpEnumClassName);
+        $enumName = $reflection->getShortName();
         $enumCases = $phpEnumClassName::cases();
+        $namespace = $this->extractNamespace($reflection->getNamespaceName());
         
-        return $this->generateRuntimeUsableEnum($enumName, $enumCases);
+        return [
+            'name' => $enumName,
+            'namespace' => $namespace,
+            'cases' => $enumCases,
+            'full_class_name' => $phpEnumClassName,
+        ];
     }
 
-    private function generateRuntimeUsableEnum(string $enumName, array $enumCases): string
+    private function extractNamespace(string $phpNamespace): string
     {
-        $output = "// Auto-generated from PHP enum\n\n";
+        $config = config('ts-enum-generator.namespace');
+        
+        // Strip prefix if configured
+        if ($config['strip_namespace_prefix']) {
+            $phpNamespace = Str::after($phpNamespace, $config['strip_namespace_prefix']);
+        }
+        
+        // Convert namespace separators
+        $tsNamespace = str_replace('\\', config('ts-enum-generator.output.namespace_separator'), $phpNamespace);
+        
+        // Add suffix if configured and not already present
+        if ($config['namespace_suffix'] && !Str::endsWith($tsNamespace, $config['namespace_suffix'])) {
+            $tsNamespace = $tsNamespace . config('ts-enum-generator.output.namespace_separator') . $config['namespace_suffix'];
+        }
+        
+        return $tsNamespace;
+    }
+
+    private function generateSingleTypeScriptFile(): void
+    {
+        if (empty($this->collectedEnums)) {
+            return;
+        }
+        
+        $filename = config('ts-enum-generator.output.output_filename', 'enums.ts');
+        $outputPath = $this->destinationDir . '/' . $filename;
+        
+        // Convert relative destination path to absolute if needed
+        if (!str_starts_with($outputPath, '/')) {
+            $outputPath = getcwd() . '/' . $outputPath;
+        }
+        
+        $content = $this->generateNamespacedContent();
+        
+        File::ensureDirectoryExists(dirname($outputPath));
+        File::put($outputPath, $content);
+        
+        $this->line("Generated: {$outputPath}");
+    }
+
+    private function generateMultipleTypeScriptFiles(): void
+    {
+        if (empty($this->collectedEnums)) {
+            return;
+        }
+        
+        File::ensureDirectoryExists($this->destinationDir);
+        
+        foreach ($this->collectedEnums as $enumData) {
+            $filename = $enumData['name'] . '.ts';
+            $outputPath = $this->destinationDir . '/' . $filename;
+            
+            // Convert relative destination path to absolute if needed
+            if (!str_starts_with($outputPath, '/')) {
+                $outputPath = getcwd() . '/' . $outputPath;
+            }
+            
+            $content = $this->generateIndividualFileContent($enumData);
+            
+            File::put($outputPath, $content);
+            $this->line("Generated: {$outputPath}");
+        }
+    }
+
+    private function generateIndividualFileContent(array $enumData): string
+    {
+        $output = '';
+        
+        if (config('ts-enum-generator.output.include_comments')) {
+            $output .= "// Auto-generated TypeScript enum from PHP enum\n\n";
+        }
+        
+        $output .= $this->generateEnumDefinition($enumData);
+        
+        return $output;
+    }
+
+    private function generateNamespacedContent(): string
+    {
+        $groupedEnums = $this->groupEnumsByNamespace();
+        $output = '';
+        
+        if (config('ts-enum-generator.output.include_comments')) {
+            $output .= "// Auto-generated TypeScript enums from PHP enums\n\n";
+        }
+        
+        foreach ($groupedEnums as $namespace => $enums) {
+            $output .= "declare namespace {$namespace} {\n";
+            
+            foreach ($enums as $enumData) {
+                $output .= $this->generateEnumDefinition($enumData);
+            }
+            
+            // Generate generic utilities if enabled
+            if (config('ts-enum-generator.output.generate_generic_utils') && 
+                config('ts-enum-generator.output.generate_runtime_objects') &&
+                !config('ts-enum-generator.output.types_only')) {
+                $output .= $this->generateGenericUtilities($enums);
+            }
+            
+            $output .= "}\n";
+        }
+        
+        return $output;
+    }
+
+    private function generateEnumDefinition(array $enumData): string
+    {
+        $enumName = $enumData['name'];
+        $cases = $enumData['cases'];
+        $output = '';
         
         // Generate the type definition
-        $output .= "export type {$enumName}Type = ";
         $typeValues = [];
-        
-        foreach ($enumCases as $case) {
+        foreach ($cases as $case) {
             if ($this->isBackedEnum($case)) {
                 $value = $case->value;
-                $typeValues[] = "'" . $value . "'";
+                $typeValues[] = "'" . addslashes($value) . "'";
             } else {
                 $typeValues[] = "'" . $case->name . "'";
             }
         }
         
-        $output .= implode(' | ', $typeValues) . ";\n\n";
+        $output .= "export type {$enumName} = " . implode(' | ', $typeValues) . ";\n";
         
-        // Generate the runtime object
-        $output .= "export const {$enumName} = {\n";
+        // Generate runtime objects if enabled
+        if (config('ts-enum-generator.output.generate_runtime_objects') && 
+            !config('ts-enum-generator.output.types_only')) {
+            $output .= $this->generateRuntimeObject($enumData);
+        }
         
-        foreach ($enumCases as $case) {
+        // Generate per-type utilities if enabled
+        if (config('ts-enum-generator.output.generate_per_type_utils') && 
+            config('ts-enum-generator.output.generate_runtime_objects') &&
+            !config('ts-enum-generator.output.types_only')) {
+            $output .= $this->generatePerTypeUtilities($enumData);
+        }
+        
+        $output .= "\n";
+        
+        return $output;
+    }
+
+    private function generateRuntimeObject(array $enumData): string
+    {
+        $enumName = $enumData['name'];
+        $cases = $enumData['cases'];
+        
+        $output = "\nexport const {$enumName} = {\n";
+        
+        foreach ($cases as $case) {
             if ($this->isBackedEnum($case)) {
                 $value = $case->value;
-                $output .= "  " . $case->name . ": '" . $value . "' as const,\n";
+                $output .= "  " . $case->name . ": '" . addslashes($value) . "' as const,\n";
             } else {
                 $name = $case->name;
                 $output .= "  " . $name . ": '" . $name . "' as const,\n";
             }
         }
         
-        $output .= "} as const;\n\n";
-        
-        // Generate utility functions
-        $output .= "export const {$enumName}Utils = {\n";
-        $output .= "  values: Object.values({$enumName}),\n";
-        $output .= "  keys: Object.keys({$enumName}) as Array<keyof typeof {$enumName}>,\n";
-        $output .= "  entries: Object.entries({$enumName}) as Array<[keyof typeof {$enumName}, {$enumName}Type]>,\n";
-        $output .= "  isValid: (value: any): value is {$enumName}Type => Object.values({$enumName}).includes(value),\n";
-        $output .= "  fromKey: (key: keyof typeof {$enumName}): {$enumName}Type => {$enumName}[key],\n";
-        $output .= "};\n\n";
-        
-        // Generate default export
-        $output .= "export default {$enumName};\n";
+        $output .= "} as const;\n";
         
         return $output;
+    }
+
+    private function generatePerTypeUtilities(array $enumData): string
+    {
+        $enumName = $enumData['name'];
+        
+        $output = "\nexport const {$enumName}Utils = {\n";
+        $output .= "  values: Object.values({$enumName}),\n";
+        $output .= "  keys: Object.keys({$enumName}) as Array<keyof typeof {$enumName}>,\n";
+        $output .= "  entries: Object.entries({$enumName}) as Array<[keyof typeof {$enumName}, {$enumName}]>,\n";
+        $output .= "  isValid: (value: any): value is {$enumName} => Object.values({$enumName}).includes(value),\n";
+        $output .= "  fromKey: (key: keyof typeof {$enumName}): {$enumName} => {$enumName}[key],\n";
+        $output .= "};\n";
+        
+        return $output;
+    }
+
+    private function generateGenericUtilities(array $enums): string
+    {
+        $output = "\nexport const EnumUtils = {\n";
+        $output .= "  isValid: <T extends Record<string, string>>(enumObject: T, value: any): value is T[keyof T] => {\n";
+        $output .= "    return Object.values(enumObject).includes(value);\n";
+        $output .= "  },\n";
+        $output .= "  values: <T extends Record<string, string>>(enumObject: T): T[keyof T][] => {\n";
+        $output .= "    return Object.values(enumObject);\n";
+        $output .= "  },\n";
+        $output .= "  keys: <T extends Record<string, string>>(enumObject: T): (keyof T)[] => {\n";
+        $output .= "    return Object.keys(enumObject) as (keyof T)[];\n";
+        $output .= "  },\n";
+        $output .= "  entries: <T extends Record<string, string>>(enumObject: T): [keyof T, T[keyof T]][] => {\n";
+        $output .= "    return Object.entries(enumObject) as [keyof T, T[keyof T]][];\n";
+        $output .= "  },\n";
+        $output .= "  fromKey: <T extends Record<string, string>>(enumObject: T, key: keyof T): T[keyof T] => {\n";
+        $output .= "    return enumObject[key];\n";
+        $output .= "  },\n";
+        $output .= "};\n";
+        
+        return $output;
+    }
+
+    private function groupEnumsByNamespace(): array
+    {
+        $grouped = [];
+        
+        foreach ($this->collectedEnums as $enumData) {
+            $namespace = $enumData['namespace'];
+            if (!isset($grouped[$namespace])) {
+                $grouped[$namespace] = [];
+            }
+            $grouped[$namespace][] = $enumData;
+        }
+        
+        return $grouped;
     }
 
     protected function getClassNameFrom(SplFileInfo $phpEnumFile): ?string
@@ -213,43 +368,5 @@ class GenerateCommand extends Command
     private function isBackedEnum(object $caseObject): bool
     {
         return $caseObject instanceof \BackedEnum;
-    }
-
-    protected function createTsEnumFile(string $path, string $tsEnumContent): void
-    {
-        File::ensureDirectoryExists(dirname($path));
-        File::put($path, $tsEnumContent);
-    }
-    
-    private function generateIndexFile(array $generatedFiles): void
-    {
-        if (empty($generatedFiles)) {
-            return;
-        }
-        
-        $indexPath = $this->destinationDir . '/index.ts';
-        
-        // Convert relative destination path to absolute if needed
-        if (!str_starts_with($indexPath, '/')) {
-            $indexPath = getcwd() . '/' . $indexPath;
-        }
-        
-        $indexContent = "// Auto-generated index file\n\n";
-        
-        foreach ($generatedFiles as $filePath) {
-            $relativePath = Str::of($filePath)
-                ->after(dirname($indexPath) . '/')
-                ->beforeLast('.ts')
-                ->replace('\\', '/');
-                
-            $enumName = Str::of($relativePath)->afterLast('/')->studly();
-
-            $indexContent .= "export { default as {$enumName}, type {$enumName}Type, {$enumName}Utils } from './{$relativePath}';\n";
-        }
-        
-        File::ensureDirectoryExists(dirname($indexPath));
-        File::put($indexPath, $indexContent);
-        
-        $this->line("Generated index file: {$indexPath}");
     }
 } 
