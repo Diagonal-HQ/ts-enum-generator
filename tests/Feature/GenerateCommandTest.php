@@ -3,6 +3,7 @@
 namespace Diagonal\TsEnumGenerator\Tests\Feature;
 
 use Diagonal\TsEnumGenerator\Tests\TestCase;
+use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\File;
 use PHPUnit\Framework\Attributes\Test;
 
@@ -150,4 +151,23 @@ class GenerateCommandTest extends TestCase
             File::deleteDirectory('tests/fixtures/module2');
         }
     }
-} 
+
+    #[Test]
+    public function itUsesTheConfiguredSourceAndDestinationIfNoneAreProvided()
+    {
+        // Given
+        Config::set('ts-enum-generator.default_source_dir', 'tests/fixtures/enums');
+        Config::set('ts-enum-generator.default_destination_dir', 'tests/output/somewhere');
+
+        // When
+        $this->artisan('ts-enums:generate')
+             ->expectsOutput('Generating runtime-usable TypeScript enums...')
+             ->expectsOutput('TypeScript enums generated successfully.')
+             ->assertExitCode(0);
+
+        // Then
+        $this->assertTrue(File::exists('tests/output/somewhere/user-role.ts'));
+        $this->assertTrue(File::exists('tests/output/somewhere/status.ts'));
+        $this->assertTrue(File::exists('tests/output/somewhere/index.ts'));
+    }
+}

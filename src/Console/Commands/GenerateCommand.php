@@ -50,6 +50,11 @@ class GenerateCommand extends Command
             $this->sourceDirectories = [$sourceDir];
         }
         
+        // Convert relative destination path to absolute for proper resolution
+        if (!str_starts_with($this->destinationDir, '/')) {
+            $this->destinationDir = getcwd() . '/' . $this->destinationDir;
+        }
+        
         // Validate directories exist and convert to absolute paths
         foreach ($this->sourceDirectories as $index => $dir) {
             if (!str_starts_with($dir, '/')) {
