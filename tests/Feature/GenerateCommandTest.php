@@ -57,23 +57,57 @@ class GenerateCommandTest extends TestCase
         // Check namespace declaration
         $this->assertStringContainsString('declare namespace Diagonal.TsEnumGenerator.Tests.Fixtures.Enums', $enumsContent);
         
-        // Check UserRole type definition
-        $this->assertStringContainsString('export type UserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
+        // Check UserRole type definition (no export in namespace)
+        $this->assertStringContainsString('type UserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
         
-        // Check UserRole runtime object
-        $this->assertStringContainsString('export const UserRole = {', $enumsContent);
-        $this->assertStringContainsString('ADMIN: \'admin\' as const,', $enumsContent);
+        // Check UserRole runtime object declaration
+        $this->assertStringContainsString('const UserRole: {', $enumsContent);
+        $this->assertStringContainsString('readonly ADMIN: \'admin\';', $enumsContent);
         
-        // Check UserRole utilities
-        $this->assertStringContainsString('export const UserRoleUtils = {', $enumsContent);
-        $this->assertStringContainsString('isValid: (value: any): value is UserRole', $enumsContent);
+        // Check UserRole utilities declaration
+        $this->assertStringContainsString('const UserRoleUtils: {', $enumsContent);
+        $this->assertStringContainsString('isValid: (value: any) => value is UserRole;', $enumsContent);
         
         // Check Status type definition  
-        $this->assertStringContainsString('export type Status = \'PENDING\' | \'APPROVED\' | \'REJECTED\' | \'CANCELLED\';', $enumsContent);
+        $this->assertStringContainsString('type Status = \'PENDING\' | \'APPROVED\' | \'REJECTED\' | \'CANCELLED\';', $enumsContent);
         
-        // Check generic utilities
-        $this->assertStringContainsString('export const EnumUtils = {', $enumsContent);
+        // Check generic utilities declaration
+        $this->assertStringContainsString('const EnumUtils: {', $enumsContent);
         $this->assertStringContainsString('isValid: <T extends Record<string, string>>', $enumsContent);
+    }
+
+    #[Test]
+    public function it_generates_correct_typescript_with_es_modules()
+    {
+        config(['ts-enum-generator.output.use_namespaces' => false]);
+        
+        $this->artisan('ts-enums:generate', [
+            '--source' => 'tests/fixtures/enums',
+            '--destination' => 'tests/output'
+        ]);
+
+        $enumsContent = File::get('tests/output/enums.ts');
+        
+        // Check that no namespace declaration is present
+        $this->assertStringNotContainsString('declare namespace', $enumsContent);
+        
+        // Check UserRole type definition with export
+        $this->assertStringContainsString('export type DiagonalTsEnumGeneratorTestsFixturesUserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
+        
+        // Check UserRole runtime object with export
+        $this->assertStringContainsString('export const DiagonalTsEnumGeneratorTestsFixturesUserRole = {', $enumsContent);
+        $this->assertStringContainsString('ADMIN: \'admin\' as const,', $enumsContent);
+        
+        // Check UserRole utilities with export
+        $this->assertStringContainsString('export const DiagonalTsEnumGeneratorTestsFixturesUserRoleUtils = {', $enumsContent);
+        $this->assertStringContainsString('isValid: (value: any): value is DiagonalTsEnumGeneratorTestsFixturesUserRole', $enumsContent);
+        
+        // Check Status type definition with export
+        $this->assertStringContainsString('export type DiagonalTsEnumGeneratorTestsFixturesStatus = \'PENDING\' | \'APPROVED\' | \'REJECTED\' | \'CANCELLED\';', $enumsContent);
+        
+        // Check generic utilities with export
+        $this->assertStringContainsString('export const EnumUtils = {', $enumsContent);
+        $this->assertStringContainsString('isValid: <T extends Record<string, string>>(enumObject: T, value: any): value is T[keyof T]', $enumsContent);
     }
 
     #[Test]
@@ -88,14 +122,14 @@ class GenerateCommandTest extends TestCase
 
         $enumsContent = File::get('tests/output/enums.ts');
         
-        // Check type definitions are present
-        $this->assertStringContainsString('export type UserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
-        $this->assertStringContainsString('export type Status = \'PENDING\' | \'APPROVED\' | \'REJECTED\' | \'CANCELLED\';', $enumsContent);
+        // Check type definitions are present (no export in namespace)
+        $this->assertStringContainsString('type UserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
+        $this->assertStringContainsString('type Status = \'PENDING\' | \'APPROVED\' | \'REJECTED\' | \'CANCELLED\';', $enumsContent);
         
         // Check runtime objects are NOT present
-        $this->assertStringNotContainsString('export const UserRole = {', $enumsContent);
-        $this->assertStringNotContainsString('export const UserRoleUtils = {', $enumsContent);
-        $this->assertStringNotContainsString('export const EnumUtils = {', $enumsContent);
+        $this->assertStringNotContainsString('const UserRole: {', $enumsContent);
+        $this->assertStringNotContainsString('const UserRoleUtils: {', $enumsContent);
+        $this->assertStringNotContainsString('const EnumUtils: {', $enumsContent);
     }
 
     #[Test]
@@ -110,15 +144,15 @@ class GenerateCommandTest extends TestCase
 
         $enumsContent = File::get('tests/output/enums.ts');
         
-        // Check type definitions and runtime objects are present
-        $this->assertStringContainsString('export type UserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
-        $this->assertStringContainsString('export const UserRole = {', $enumsContent);
+        // Check type definitions and runtime objects are present (no export in namespace)
+        $this->assertStringContainsString('type UserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
+        $this->assertStringContainsString('const UserRole: {', $enumsContent);
         
         // Check per-type utilities are NOT present
-        $this->assertStringNotContainsString('export const UserRoleUtils = {', $enumsContent);
+        $this->assertStringNotContainsString('const UserRoleUtils: {', $enumsContent);
         
         // Check generic utilities are still present
-        $this->assertStringContainsString('export const EnumUtils = {', $enumsContent);
+        $this->assertStringContainsString('const EnumUtils: {', $enumsContent);
     }
 
     #[Test]
@@ -133,15 +167,15 @@ class GenerateCommandTest extends TestCase
 
         $enumsContent = File::get('tests/output/enums.ts');
         
-        // Check type definitions and runtime objects are present
-        $this->assertStringContainsString('export type UserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
-        $this->assertStringContainsString('export const UserRole = {', $enumsContent);
+        // Check type definitions and runtime objects are present (no export in namespace)
+        $this->assertStringContainsString('type UserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
+        $this->assertStringContainsString('const UserRole: {', $enumsContent);
         
         // Check per-type utilities are present
-        $this->assertStringContainsString('export const UserRoleUtils = {', $enumsContent);
+        $this->assertStringContainsString('const UserRoleUtils: {', $enumsContent);
         
         // Check generic utilities are NOT present
-        $this->assertStringNotContainsString('export const EnumUtils = {', $enumsContent);
+        $this->assertStringNotContainsString('const EnumUtils: {', $enumsContent);
     }
 
     #[Test]
@@ -154,11 +188,11 @@ class GenerateCommandTest extends TestCase
 
         $enumsContent = File::get('tests/output/enums.ts');
         
-        // Check that the namespace contains the backed enum with all components
-        $this->assertStringContainsString('export type UserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
-        $this->assertStringContainsString('export const UserRole = {', $enumsContent);
-        $this->assertStringContainsString('ADMIN: \'admin\' as const,', $enumsContent);
-        $this->assertStringContainsString('export const UserRoleUtils = {', $enumsContent);
+        // Check that the namespace contains the backed enum with all components (no export in namespace)
+        $this->assertStringContainsString('type UserRole = \'admin\' | \'user\' | \'moderator\' | \'guest\';', $enumsContent);
+        $this->assertStringContainsString('const UserRole: {', $enumsContent);
+        $this->assertStringContainsString('readonly ADMIN: \'admin\';', $enumsContent);
+        $this->assertStringContainsString('const UserRoleUtils: {', $enumsContent);
     }
 
     #[Test]
@@ -171,11 +205,11 @@ class GenerateCommandTest extends TestCase
 
         $enumsContent = File::get('tests/output/enums.ts');
         
-        // Check that the namespace contains the pure enum with all components
-        $this->assertStringContainsString('export type Status = \'PENDING\' | \'APPROVED\' | \'REJECTED\' | \'CANCELLED\';', $enumsContent);
-        $this->assertStringContainsString('export const Status = {', $enumsContent);
-        $this->assertStringContainsString('PENDING: \'PENDING\' as const,', $enumsContent);
-        $this->assertStringContainsString('export const StatusUtils = {', $enumsContent);
+        // Check that the namespace contains the pure enum with all components (no export in namespace)
+        $this->assertStringContainsString('type Status = \'PENDING\' | \'APPROVED\' | \'REJECTED\' | \'CANCELLED\';', $enumsContent);
+        $this->assertStringContainsString('const Status: {', $enumsContent);
+        $this->assertStringContainsString('readonly PENDING: \'PENDING\';', $enumsContent);
+        $this->assertStringContainsString('const StatusUtils: {', $enumsContent);
     }
 
     #[Test]
@@ -188,15 +222,15 @@ class GenerateCommandTest extends TestCase
 
         $enumsContent = File::get('tests/output/enums.ts');
 
-        // Check that both enums are in the same namespace with all components
+        // Check that both enums are in the same namespace with all components (no export in namespace)
         $this->assertStringContainsString('declare namespace Diagonal.TsEnumGenerator.Tests.Fixtures.Enums', $enumsContent);
-        $this->assertStringContainsString('export type UserRole', $enumsContent);
-        $this->assertStringContainsString('export const UserRole', $enumsContent);
-        $this->assertStringContainsString('export const UserRoleUtils', $enumsContent);
-        $this->assertStringContainsString('export type Status', $enumsContent);
-        $this->assertStringContainsString('export const Status', $enumsContent);
-        $this->assertStringContainsString('export const StatusUtils', $enumsContent);
-        $this->assertStringContainsString('export const EnumUtils', $enumsContent);
+        $this->assertStringContainsString('type UserRole', $enumsContent);
+        $this->assertStringContainsString('const UserRole: {', $enumsContent);
+        $this->assertStringContainsString('const UserRoleUtils: {', $enumsContent);
+        $this->assertStringContainsString('type Status', $enumsContent);
+        $this->assertStringContainsString('const Status: {', $enumsContent);
+        $this->assertStringContainsString('const StatusUtils: {', $enumsContent);
+        $this->assertStringContainsString('const EnumUtils: {', $enumsContent);
     }
 
     #[Test]
@@ -241,9 +275,9 @@ class GenerateCommandTest extends TestCase
             $this->assertTrue(File::exists('tests/output/enums.ts'));
             $enumsContent = File::get('tests/output/enums.ts');
             
-            // Check that both enums are present
-            $this->assertStringContainsString('export type UserRole', $enumsContent);
-            $this->assertStringContainsString('export type Status', $enumsContent);
+            // Check that both enums are present (no export in namespace)
+            $this->assertStringContainsString('type UserRole', $enumsContent);
+            $this->assertStringContainsString('type Status', $enumsContent);
         } finally {
             // Clean up test directories
             File::deleteDirectory('tests/fixtures/module1');
