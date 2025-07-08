@@ -12,14 +12,14 @@ use Symfony\Component\Finder\SplFileInfo;
 
 class GenerateCommand extends Command
 {
-    protected $signature = 'ts-enums:generate
-                           {--source= : Source directory containing PHP enums}
+    protected $signature = 'ts-enums:generate 
+                           {--source= : Source directory containing PHP enums (supports glob patterns)}
                            {--destination= : Destination directory for TypeScript files}
                            {--watch : Watch for changes and regenerate automatically}';
     
     protected $description = 'Generate runtime-usable TypeScript enums from PHP enums';
     
-    protected string $sourceDir;
+    protected array $sourceDirectories;
     protected string $destinationDir;
 
     public function handle(): void
@@ -37,40 +37,61 @@ class GenerateCommand extends Command
 
     private function setOptions(): void
     {
-        $this->sourceDir = $this->option('source') ?: config('ts-enum-generator.default_source_dir');
-        $this->destinationDir = $this->option('destination') ?: config('ts-enum-generator.default_destination_dir');
-
-        // Convert relative paths to absolute for proper resolution
-        if (!str_starts_with($this->sourceDir, '/')) {
-            $this->sourceDir = getcwd() . '/' . $this->sourceDir;
+        $sourceDir = $this->option('source') ?? config('ts-enum-generator.default_source_dir');
+        $this->destinationDir = $this->option('destination') ?? config('ts-enum-generator.default_destination_dir');
+        
+        // Handle glob patterns
+        if (str_contains($sourceDir, '*')) {
+            $this->sourceDirectories = glob($sourceDir, GLOB_ONLYDIR);
+            if (empty($this->sourceDirectories)) {
+                throw new Exception("No directories found matching pattern '{$sourceDir}'");
+            }
+        } else {
+            $this->sourceDirectories = [$sourceDir];
         }
         
-        if (!is_dir($this->sourceDir)) {
-            throw new Exception("Source directory '{$this->sourceDir}' does not exist.");
+        // Convert relative destination path to absolute for proper resolution
+        if (!str_starts_with($this->destinationDir, '/')) {
+            $this->destinationDir = getcwd() . '/' . $this->destinationDir;
+        }
+        
+        // Validate directories exist and convert to absolute paths
+        foreach ($this->sourceDirectories as $index => $dir) {
+            if (!str_starts_with($dir, '/')) {
+                $dir = getcwd() . '/' . $dir;
+                $this->sourceDirectories[$index] = $dir;
+            }
+            
+            if (!is_dir($dir)) {
+                throw new Exception("Source directory '{$dir}' does not exist.");
+            }
         }
     }
 
     private function generate(): void
     {
-        $phpEnumFiles = File::allFiles($this->sourceDir);
         $generatedFiles = [];
         
-        foreach ($phpEnumFiles as $phpEnumFile) {
-            try {
-                if (!$this->isEnumFile($phpEnumFile)) {
-                    continue;
+        foreach ($this->sourceDirectories as $sourceDir) {
+            $phpEnumFiles = File::allFiles($sourceDir);
+            
+            foreach ($phpEnumFiles as $phpEnumFile) {
+                try {
+                    if (!$this->isEnumFile($phpEnumFile)) {
+                        continue;
+                    }
+                    
+                    $tsEnumFilePath = $this->getTsEnumFilePathFrom($phpEnumFile, $sourceDir);
+                    $tsEnumFileContent = $this->generateTsEnumContentFrom($phpEnumFile);
+                    
+                    if ($tsEnumFileContent) {
+                        $this->createTsEnumFile($tsEnumFilePath, $tsEnumFileContent);
+                        $generatedFiles[] = $tsEnumFilePath;
+                        $this->line("Generated: {$tsEnumFilePath}");
+                    }
+                } catch (Exception $exception) {
+                    $this->warn("Failed to process {$phpEnumFile->getFilename()}: {$exception->getMessage()}");
                 }
-                
-                $tsEnumFilePath = $this->getTsEnumFilePathFrom($phpEnumFile);
-                $tsEnumFileContent = $this->generateTsEnumContentFrom($phpEnumFile);
-                
-                if ($tsEnumFileContent) {
-                    $this->createTsEnumFile($tsEnumFilePath, $tsEnumFileContent);
-                    $generatedFiles[] = $tsEnumFilePath;
-                    $this->line("Generated: {$tsEnumFilePath}");
-                }
-            } catch (Exception $exception) {
-                $this->warn("Failed to process {$phpEnumFile->getFilename()}: {$exception->getMessage()}");
             }
         }
         
@@ -84,14 +105,14 @@ class GenerateCommand extends Command
         return preg_match('/enum\s+\w+/', $contents);
     }
 
-    private function getTsEnumFilePathFrom(SplFileInfo $phpEnumFile): string
+    private function getTsEnumFilePathFrom(SplFileInfo $phpEnumFile, string $sourceDir): string
     {
         $directoriesConvention = config('ts-enum-generator.convention.directories', 'kebab');
         $filesConvention = config('ts-enum-generator.convention.files', 'kebab');
         
         $dirPath = Str::of($phpEnumFile->getPath())
             ->replace('\\', '/')
-            ->after($this->sourceDir)
+            ->after($sourceDir)
             ->trim('/')
             ->explode('/')
             ->filter()

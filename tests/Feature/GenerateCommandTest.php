@@ -102,6 +102,57 @@ class GenerateCommandTest extends TestCase
     }
 
     #[Test]
+    public function it_uses_config_defaults_when_no_options_provided()
+    {
+        // Set up config defaults
+        config(['ts-enum-generator.default_source_dir' => 'tests/fixtures/enums']);
+        config(['ts-enum-generator.default_destination_dir' => 'tests/output']);
+        
+        // Run command without options
+        $this->artisan('ts-enums:generate')
+            ->expectsOutput('Generating runtime-usable TypeScript enums...')
+            ->expectsOutput('TypeScript enums generated successfully.')
+            ->assertExitCode(0);
+
+        // Check that files were generated using config defaults
+        $this->assertTrue(File::exists('tests/output/user-role.ts'));
+        $this->assertTrue(File::exists('tests/output/status.ts'));
+        $this->assertTrue(File::exists('tests/output/index.ts'));
+    }
+
+    #[Test]
+    public function it_supports_glob_patterns_for_multiple_directories()
+    {
+        // Create multiple test directories
+        File::makeDirectory('tests/fixtures/module1/enums', 0755, true);
+        File::makeDirectory('tests/fixtures/module2/enums', 0755, true);
+        
+        // Copy existing enum files to multiple directories
+        File::copy('tests/fixtures/enums/UserRole.php', 'tests/fixtures/module1/enums/UserRole.php');
+        File::copy('tests/fixtures/enums/Status.php', 'tests/fixtures/module2/enums/Status.php');
+        
+        try {
+            // Test glob pattern
+            $this->artisan('ts-enums:generate', [
+                '--source' => 'tests/fixtures/*/enums',
+                '--destination' => 'tests/output'
+            ])
+            ->expectsOutput('Generating runtime-usable TypeScript enums...')
+            ->expectsOutput('TypeScript enums generated successfully.')
+            ->assertExitCode(0);
+
+            // Check that files were generated from both directories
+            $this->assertTrue(File::exists('tests/output/user-role.ts'));
+            $this->assertTrue(File::exists('tests/output/status.ts'));
+            $this->assertTrue(File::exists('tests/output/index.ts'));
+        } finally {
+            // Clean up test directories
+            File::deleteDirectory('tests/fixtures/module1');
+            File::deleteDirectory('tests/fixtures/module2');
+        }
+    }
+
+    #[Test]
     public function itUsesTheConfiguredSourceAndDestinationIfNoneAreProvided()
     {
         // Given
