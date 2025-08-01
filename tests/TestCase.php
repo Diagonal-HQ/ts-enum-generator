@@ -21,7 +21,7 @@ class TestCase extends Orchestra
 
     protected function getEnvironmentSetUp($app): void
     {
-        config()->set('ts-enum-generator.default_source_dir', 'tests/fixtures/enums');
+        config()->set('ts-enum-generator.default_source_dir', 'tests/Fixtures/Enums');
         config()->set('ts-enum-generator.default_destination_dir', 'tests/output');
     }
 }

@@ -33,7 +33,7 @@ class GenerateCommandTest extends TestCase
     public function it_can_generate_typescript_enums_from_php_enums()
     {
         $this->artisan('ts-enums:generate', [
-            '--source' => 'tests/fixtures/enums',
+            '--source' => 'tests/Fixtures/Enums',
             '--destination' => 'tests/output',
         ])
             ->expectsOutput('Generating runtime-usable TypeScript enums...')
@@ -48,7 +48,7 @@ class GenerateCommandTest extends TestCase
     public function it_generates_correct_typescript_with_namespaces()
     {
         $this->artisan('ts-enums:generate', [
-            '--source' => 'tests/fixtures/enums',
+            '--source' => 'tests/Fixtures/Enums',
             '--destination' => 'tests/output',
         ]);
 
@@ -82,7 +82,7 @@ class GenerateCommandTest extends TestCase
         config(['ts-enum-generator.output.use_namespaces' => false]);
 
         $this->artisan('ts-enums:generate', [
-            '--source' => 'tests/fixtures/enums',
+            '--source' => 'tests/Fixtures/Enums',
             '--destination' => 'tests/output',
         ]);
 
@@ -116,7 +116,7 @@ class GenerateCommandTest extends TestCase
         config(['ts-enum-generator.output.types_only' => true]);
 
         $this->artisan('ts-enums:generate', [
-            '--source' => 'tests/fixtures/enums',
+            '--source' => 'tests/Fixtures/Enums',
             '--destination' => 'tests/output',
         ]);
 
@@ -138,7 +138,7 @@ class GenerateCommandTest extends TestCase
         config(['ts-enum-generator.output.generate_per_type_utils' => false]);
 
         $this->artisan('ts-enums:generate', [
-            '--source' => 'tests/fixtures/enums',
+            '--source' => 'tests/Fixtures/Enums',
             '--destination' => 'tests/output',
         ]);
 
@@ -161,7 +161,7 @@ class GenerateCommandTest extends TestCase
         config(['ts-enum-generator.output.generate_generic_utils' => false]);
 
         $this->artisan('ts-enums:generate', [
-            '--source' => 'tests/fixtures/enums',
+            '--source' => 'tests/Fixtures/Enums',
             '--destination' => 'tests/output',
         ]);
 
@@ -182,7 +182,7 @@ class GenerateCommandTest extends TestCase
     public function it_generates_correct_typescript_for_backed_enum()
     {
         $this->artisan('ts-enums:generate', [
-            '--source' => 'tests/fixtures/enums',
+            '--source' => 'tests/Fixtures/Enums',
             '--destination' => 'tests/output',
         ]);
 
@@ -199,7 +199,7 @@ class GenerateCommandTest extends TestCase
     public function it_generates_correct_typescript_for_pure_enum()
     {
         $this->artisan('ts-enums:generate', [
-            '--source' => 'tests/fixtures/enums',
+            '--source' => 'tests/Fixtures/Enums',
             '--destination' => 'tests/output',
         ]);
 
@@ -216,7 +216,7 @@ class GenerateCommandTest extends TestCase
     public function it_generates_single_file_with_all_enums()
     {
         $this->artisan('ts-enums:generate', [
-            '--source' => 'tests/fixtures/enums',
+            '--source' => 'tests/Fixtures/Enums',
             '--destination' => 'tests/output',
         ]);
 
@@ -237,7 +237,7 @@ class GenerateCommandTest extends TestCase
     public function it_uses_config_defaults_when_no_options_provided()
     {
         // Set up config defaults
-        config(['ts-enum-generator.default_source_dir' => 'tests/fixtures/enums']);
+        config(['ts-enum-generator.default_source_dir' => 'tests/Fixtures/Enums']);
         config(['ts-enum-generator.default_destination_dir' => 'tests/output']);
 
         // Run command without options
@@ -258,8 +258,8 @@ class GenerateCommandTest extends TestCase
         File::makeDirectory('tests/fixtures/module2/enums', 0755, true);
 
         // Copy existing enum files to multiple directories
-        File::copy('tests/fixtures/enums/UserRole.php', 'tests/fixtures/module1/enums/UserRole.php');
-        File::copy('tests/fixtures/enums/Status.php', 'tests/fixtures/module2/enums/Status.php');
+        File::copy('tests/Fixtures/Enums/UserRole.php', 'tests/fixtures/module1/enums/UserRole.php');
+        File::copy('tests/Fixtures/Enums/Status.php', 'tests/fixtures/module2/enums/Status.php');
 
         try {
             // Test glob pattern
@@ -289,7 +289,7 @@ class GenerateCommandTest extends TestCase
     public function it_uses_the_configured_source_and_destination_if_none_are_provided()
     {
         // Given
-        Config::set('ts-enum-generator.default_source_dir', 'tests/fixtures/enums');
+        Config::set('ts-enum-generator.default_source_dir', 'tests/Fixtures/Enums');
         Config::set('ts-enum-generator.default_destination_dir', 'tests/output/somewhere');
 
         // When
@@ -308,7 +308,7 @@ class GenerateCommandTest extends TestCase
         config(['ts-enum-generator.output.single_file' => false]);
 
         $this->artisan('ts-enums:generate', [
-            '--source' => 'tests/fixtures/enums',
+            '--source' => 'tests/Fixtures/Enums',
             '--destination' => 'tests/output',
         ])
             ->expectsOutput('Generating runtime-usable TypeScript enums...')
