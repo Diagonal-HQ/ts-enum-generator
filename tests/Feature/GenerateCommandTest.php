@@ -34,7 +34,7 @@ class GenerateCommandTest extends TestCase
     {
         $this->artisan('ts-enums:generate', [
             '--source' => 'tests/fixtures/enums',
-            '--destination' => 'tests/output'
+            '--destination' => 'tests/output',
         ])
             ->expectsOutput('Generating runtime-usable TypeScript enums...')
             ->expectsOutput('TypeScript enums generated successfully.')
@@ -49,7 +49,7 @@ class GenerateCommandTest extends TestCase
     {
         $this->artisan('ts-enums:generate', [
             '--source' => 'tests/fixtures/enums',
-            '--destination' => 'tests/output'
+            '--destination' => 'tests/output',
         ]);
 
         $enumsContent = File::get('tests/output/enums.ts');
@@ -83,7 +83,7 @@ class GenerateCommandTest extends TestCase
 
         $this->artisan('ts-enums:generate', [
             '--source' => 'tests/fixtures/enums',
-            '--destination' => 'tests/output'
+            '--destination' => 'tests/output',
         ]);
 
         $enumsContent = File::get('tests/output/enums.ts');
@@ -110,8 +110,6 @@ class GenerateCommandTest extends TestCase
         $this->assertStringContainsString('isValid: <T extends Record<string, string>>(enumObject: T, value: any): value is T[keyof T]', $enumsContent);
     }
 
-
-
     #[Test]
     public function it_generates_only_types_when_types_only_is_enabled()
     {
@@ -119,7 +117,7 @@ class GenerateCommandTest extends TestCase
 
         $this->artisan('ts-enums:generate', [
             '--source' => 'tests/fixtures/enums',
-            '--destination' => 'tests/output'
+            '--destination' => 'tests/output',
         ]);
 
         $enumsContent = File::get('tests/output/enums.ts');
@@ -141,7 +139,7 @@ class GenerateCommandTest extends TestCase
 
         $this->artisan('ts-enums:generate', [
             '--source' => 'tests/fixtures/enums',
-            '--destination' => 'tests/output'
+            '--destination' => 'tests/output',
         ]);
 
         $enumsContent = File::get('tests/output/enums.ts');
@@ -164,7 +162,7 @@ class GenerateCommandTest extends TestCase
 
         $this->artisan('ts-enums:generate', [
             '--source' => 'tests/fixtures/enums',
-            '--destination' => 'tests/output'
+            '--destination' => 'tests/output',
         ]);
 
         $enumsContent = File::get('tests/output/enums.ts');
@@ -185,7 +183,7 @@ class GenerateCommandTest extends TestCase
     {
         $this->artisan('ts-enums:generate', [
             '--source' => 'tests/fixtures/enums',
-            '--destination' => 'tests/output'
+            '--destination' => 'tests/output',
         ]);
 
         $enumsContent = File::get('tests/output/enums.ts');
@@ -202,7 +200,7 @@ class GenerateCommandTest extends TestCase
     {
         $this->artisan('ts-enums:generate', [
             '--source' => 'tests/fixtures/enums',
-            '--destination' => 'tests/output'
+            '--destination' => 'tests/output',
         ]);
 
         $enumsContent = File::get('tests/output/enums.ts');
@@ -219,7 +217,7 @@ class GenerateCommandTest extends TestCase
     {
         $this->artisan('ts-enums:generate', [
             '--source' => 'tests/fixtures/enums',
-            '--destination' => 'tests/output'
+            '--destination' => 'tests/output',
         ]);
 
         $enumsContent = File::get('tests/output/enums.ts');
@@ -267,7 +265,7 @@ class GenerateCommandTest extends TestCase
             // Test glob pattern
             $this->artisan('ts-enums:generate', [
                 '--source' => 'tests/fixtures/*/enums',
-                '--destination' => 'tests/output'
+                '--destination' => 'tests/output',
             ])
                 ->expectsOutput('Generating runtime-usable TypeScript enums...')
                 ->expectsOutput('TypeScript enums generated successfully.')
@@ -288,7 +286,7 @@ class GenerateCommandTest extends TestCase
     }
 
     #[Test]
-    public function itUsesTheConfiguredSourceAndDestinationIfNoneAreProvided()
+    public function it_uses_the_configured_source_and_destination_if_none_are_provided()
     {
         // Given
         Config::set('ts-enum-generator.default_source_dir', 'tests/fixtures/enums');
@@ -311,7 +309,7 @@ class GenerateCommandTest extends TestCase
 
         $this->artisan('ts-enums:generate', [
             '--source' => 'tests/fixtures/enums',
-            '--destination' => 'tests/output'
+            '--destination' => 'tests/output',
         ])
             ->expectsOutput('Generating runtime-usable TypeScript enums...')
             ->expectsOutput('TypeScript enums generated successfully.')

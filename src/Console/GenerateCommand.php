@@ -19,7 +19,9 @@ class GenerateCommand extends Command
     protected $description = 'Generate runtime-usable TypeScript enums from PHP enums';
 
     protected array $sourceDirectories;
+
     protected string $destinationDir;
+
     protected array $collectedEnums = [];
 
     public function handle(): void
@@ -51,18 +53,18 @@ class GenerateCommand extends Command
         }
 
         // Convert relative destination path to absolute for proper resolution
-        if (!str_starts_with($this->destinationDir, '/')) {
-            $this->destinationDir = getcwd() . '/' . $this->destinationDir;
+        if (! str_starts_with($this->destinationDir, '/')) {
+            $this->destinationDir = getcwd().'/'.$this->destinationDir;
         }
 
         // Validate directories exist and convert to absolute paths
         foreach ($this->sourceDirectories as $index => $dir) {
-            if (!str_starts_with($dir, '/')) {
-                $dir = getcwd() . '/' . $dir;
+            if (! str_starts_with($dir, '/')) {
+                $dir = getcwd().'/'.$dir;
                 $this->sourceDirectories[$index] = $dir;
             }
 
-            if (!is_dir($dir)) {
+            if (! is_dir($dir)) {
                 throw new Exception("Source directory '{$dir}' does not exist.");
             }
         }
@@ -77,7 +79,7 @@ class GenerateCommand extends Command
 
             foreach ($phpEnumFiles as $phpEnumFile) {
                 try {
-                    if (!$this->isEnumFile($phpEnumFile)) {
+                    if (! $this->isEnumFile($phpEnumFile)) {
                         continue;
                     }
 
@@ -104,6 +106,7 @@ class GenerateCommand extends Command
     private function isEnumFile(SplFileInfo $phpEnumFile): bool
     {
         $contents = File::get($phpEnumFile);
+
         return preg_match('/enum\s+\w+/', $contents);
     }
 
@@ -111,11 +114,11 @@ class GenerateCommand extends Command
     {
         $phpEnumClassName = $this->getClassNameFrom($phpEnumFile);
 
-        if (!$phpEnumClassName) {
+        if (! $phpEnumClassName) {
             return null;
         }
 
-        if (!enum_exists($phpEnumClassName)) {
+        if (! enum_exists($phpEnumClassName)) {
             return null;
         }
 
@@ -145,8 +148,8 @@ class GenerateCommand extends Command
         $tsNamespace = str_replace('\\', config('ts-enum-generator.output.namespace_separator'), $phpNamespace);
 
         // Add suffix if configured and not already present
-        if ($config['namespace_suffix'] && !Str::endsWith($tsNamespace, $config['namespace_suffix'])) {
-            $tsNamespace = $tsNamespace . config('ts-enum-generator.output.namespace_separator') . $config['namespace_suffix'];
+        if ($config['namespace_suffix'] && ! Str::endsWith($tsNamespace, $config['namespace_suffix'])) {
+            $tsNamespace = $tsNamespace.config('ts-enum-generator.output.namespace_separator').$config['namespace_suffix'];
         }
 
         return $tsNamespace;
@@ -159,11 +162,11 @@ class GenerateCommand extends Command
         }
 
         $filename = config('ts-enum-generator.output.output_filename', 'enums.ts');
-        $outputPath = $this->destinationDir . '/' . $filename;
+        $outputPath = $this->destinationDir.'/'.$filename;
 
         // Convert relative destination path to absolute if needed
-        if (!str_starts_with($outputPath, '/')) {
-            $outputPath = getcwd() . '/' . $outputPath;
+        if (! str_starts_with($outputPath, '/')) {
+            $outputPath = getcwd().'/'.$outputPath;
         }
 
         // Check if we should use namespaces or ES modules
@@ -188,12 +191,12 @@ class GenerateCommand extends Command
         File::ensureDirectoryExists($this->destinationDir);
 
         foreach ($this->collectedEnums as $enumData) {
-            $filename = $enumData['name'] . '.ts';
-            $outputPath = $this->destinationDir . '/' . $filename;
+            $filename = $enumData['name'].'.ts';
+            $outputPath = $this->destinationDir.'/'.$filename;
 
             // Convert relative destination path to absolute if needed
-            if (!str_starts_with($outputPath, '/')) {
-                $outputPath = getcwd() . '/' . $outputPath;
+            if (! str_starts_with($outputPath, '/')) {
+                $outputPath = getcwd().'/'.$outputPath;
             }
 
             $content = $this->generateIndividualFileContent($enumData);
@@ -228,24 +231,24 @@ class GenerateCommand extends Command
         foreach ($cases as $case) {
             if ($this->isBackedEnum($case)) {
                 $value = $case->value;
-                $typeValues[] = "'" . addslashes($value) . "'";
+                $typeValues[] = "'".addslashes($value)."'";
             } else {
-                $typeValues[] = "'" . $case->name . "'";
+                $typeValues[] = "'".$case->name."'";
             }
         }
 
-        $output .= "export type {$enumName} = " . implode(' | ', $typeValues) . ";\n";
+        $output .= "export type {$enumName} = ".implode(' | ', $typeValues).";\n";
 
         // Generate runtime objects if enabled
         if (config('ts-enum-generator.output.generate_runtime_objects') &&
-            !config('ts-enum-generator.output.types_only')) {
+            ! config('ts-enum-generator.output.types_only')) {
             $output .= $this->generateIndividualRuntimeObject($enumData);
         }
 
         // Generate per-type utilities if enabled
         if (config('ts-enum-generator.output.generate_per_type_utils') &&
             config('ts-enum-generator.output.generate_runtime_objects') &&
-            !config('ts-enum-generator.output.types_only')) {
+            ! config('ts-enum-generator.output.types_only')) {
             $output .= $this->generateIndividualPerTypeUtilities($enumData);
         }
 
@@ -264,10 +267,10 @@ class GenerateCommand extends Command
         foreach ($cases as $case) {
             if ($this->isBackedEnum($case)) {
                 $value = $case->value;
-                $output .= "  " . $case->name . ": '" . addslashes($value) . "' as const,\n";
+                $output .= '  '.$case->name.": '".addslashes($value)."' as const,\n";
             } else {
                 $name = $case->name;
-                $output .= "  " . $name . ": '" . $name . "' as const,\n";
+                $output .= '  '.$name.": '".$name."' as const,\n";
             }
         }
 
@@ -310,7 +313,7 @@ class GenerateCommand extends Command
             // Generate generic utilities if enabled
             if (config('ts-enum-generator.output.generate_generic_utils') &&
                 config('ts-enum-generator.output.generate_runtime_objects') &&
-                !config('ts-enum-generator.output.types_only')) {
+                ! config('ts-enum-generator.output.types_only')) {
                 $output .= $this->generateNamespaceGenericUtilities($enums);
             }
 
@@ -335,7 +338,7 @@ class GenerateCommand extends Command
         // Generate generic utilities if enabled
         if (config('ts-enum-generator.output.generate_generic_utils') &&
             config('ts-enum-generator.output.generate_runtime_objects') &&
-            !config('ts-enum-generator.output.types_only')) {
+            ! config('ts-enum-generator.output.types_only')) {
             $output .= $this->generateESModuleGenericUtilities();
         }
 
@@ -353,24 +356,24 @@ class GenerateCommand extends Command
         foreach ($cases as $case) {
             if ($this->isBackedEnum($case)) {
                 $value = $case->value;
-                $typeValues[] = "'" . addslashes($value) . "'";
+                $typeValues[] = "'".addslashes($value)."'";
             } else {
-                $typeValues[] = "'" . $case->name . "'";
+                $typeValues[] = "'".$case->name."'";
             }
         }
 
-        $output .= "  type {$enumName} = " . implode(' | ', $typeValues) . ";\n";
+        $output .= "  type {$enumName} = ".implode(' | ', $typeValues).";\n";
 
         // Generate runtime objects if enabled - as ambient declarations
         if (config('ts-enum-generator.output.generate_runtime_objects') &&
-            !config('ts-enum-generator.output.types_only')) {
+            ! config('ts-enum-generator.output.types_only')) {
             $output .= $this->generateNamespaceRuntimeObject($enumData);
         }
 
         // Generate per-type utilities if enabled - as ambient declarations
         if (config('ts-enum-generator.output.generate_per_type_utils') &&
             config('ts-enum-generator.output.generate_runtime_objects') &&
-            !config('ts-enum-generator.output.types_only')) {
+            ! config('ts-enum-generator.output.types_only')) {
             $output .= $this->generateNamespacePerTypeUtilities($enumData);
         }
 
@@ -390,24 +393,24 @@ class GenerateCommand extends Command
         foreach ($cases as $case) {
             if ($this->isBackedEnum($case)) {
                 $value = $case->value;
-                $typeValues[] = "'" . addslashes($value) . "'";
+                $typeValues[] = "'".addslashes($value)."'";
             } else {
-                $typeValues[] = "'" . $case->name . "'";
+                $typeValues[] = "'".$case->name."'";
             }
         }
 
-        $output .= "export type {$enumName} = " . implode(' | ', $typeValues) . ";\n";
+        $output .= "export type {$enumName} = ".implode(' | ', $typeValues).";\n";
 
         // Generate runtime objects if enabled
         if (config('ts-enum-generator.output.generate_runtime_objects') &&
-            !config('ts-enum-generator.output.types_only')) {
+            ! config('ts-enum-generator.output.types_only')) {
             $output .= $this->generateESModuleRuntimeObject($enumData);
         }
 
         // Generate per-type utilities if enabled
         if (config('ts-enum-generator.output.generate_per_type_utils') &&
             config('ts-enum-generator.output.generate_runtime_objects') &&
-            !config('ts-enum-generator.output.types_only')) {
+            ! config('ts-enum-generator.output.types_only')) {
             $output .= $this->generateESModulePerTypeUtilities($enumData);
         }
 
@@ -426,10 +429,10 @@ class GenerateCommand extends Command
         foreach ($cases as $case) {
             if ($this->isBackedEnum($case)) {
                 $value = $case->value;
-                $output .= "    readonly " . $case->name . ": '" . addslashes($value) . "';\n";
+                $output .= '    readonly '.$case->name.": '".addslashes($value)."';\n";
             } else {
                 $name = $case->name;
-                $output .= "    readonly " . $name . ": '" . $name . "';\n";
+                $output .= '    readonly '.$name.": '".$name."';\n";
             }
         }
 
@@ -448,10 +451,10 @@ class GenerateCommand extends Command
         foreach ($cases as $case) {
             if ($this->isBackedEnum($case)) {
                 $value = $case->value;
-                $output .= "  " . $case->name . ": '" . addslashes($value) . "' as const,\n";
+                $output .= '  '.$case->name.": '".addslashes($value)."' as const,\n";
             } else {
                 $name = $case->name;
-                $output .= "  " . $name . ": '" . $name . "' as const,\n";
+                $output .= '  '.$name.": '".$name."' as const,\n";
             }
         }
 
@@ -532,7 +535,7 @@ class GenerateCommand extends Command
 
         foreach ($this->collectedEnums as $enumData) {
             $namespace = $enumData['namespace'];
-            if (!isset($grouped[$namespace])) {
+            if (! isset($grouped[$namespace])) {
                 $grouped[$namespace] = [];
             }
             $grouped[$namespace][] = $enumData;
@@ -547,7 +550,7 @@ class GenerateCommand extends Command
 
         if (preg_match('/namespace\s+(.+?);/', $contents, $namespaceMatch) &&
             preg_match('/enum\s+(\w+)/', $contents, $enumMatch)) {
-            return $namespaceMatch[1] . '\\' . $enumMatch[1];
+            return $namespaceMatch[1].'\\'.$enumMatch[1];
         }
 
         return null;
