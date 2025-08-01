@@ -207,7 +207,7 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ## Security Vulnerabilities
 
-Please review [our security policy](../../security/policy) on how to report security vulnerabilities.
+Please review [our security policy](https://github.com/diagonal/ts-enum-generator/security/policy) on how to report security vulnerabilities.
 
 ## Credits
 
