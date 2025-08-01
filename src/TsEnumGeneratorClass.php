@@ -2,6 +2,4 @@
 
 namespace Diagonal\TsEnumGenerator;
 
-class TsEnumGeneratorClass
-{
-}
+class TsEnumGeneratorClass {}

@@ -15,11 +15,15 @@
         }
     ],
     "require": {
-        "php": "^8.4"
+        "php": "^8.4",
+        "illuminate/support": "^12.21",
+        "nette/php-generator": "^4.1",
+        "symfony/finder": "^7.3"
     },
     "require-dev": {
-        "pestphp/pest": "^3.0",
         "laravel/pint": "^1.0",
+        "orchestra/testbench": "^10.4",
+        "pestphp/pest": "^3.0",
         "spatie/ray": "^1.28"
     },
     "autoload": {
