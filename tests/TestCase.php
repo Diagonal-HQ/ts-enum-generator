@@ -12,16 +12,16 @@ class TestCase extends Orchestra
         parent::setUp();
     }
 
-    protected function getPackageProviders($app)
+    protected function getPackageProviders($app): array
     {
         return [
             TsEnumGeneratorServiceProvider::class,
         ];
     }
 
-    protected function getEnvironmentSetUp($app)
+    protected function getEnvironmentSetUp($app): void
     {
-        config()->set('ts-enum-generator.default_source_dir', 'tests/fixtures/enums');
+        config()->set('ts-enum-generator.default_source_dir', 'tests/Fixtures/Enums');
         config()->set('ts-enum-generator.default_destination_dir', 'tests/output');
     }
-} 
+}

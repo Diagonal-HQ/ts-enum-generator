@@ -8,4 +8,4 @@ enum Status
     case APPROVED;
     case REJECTED;
     case CANCELLED;
-} 
+}

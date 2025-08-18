@@ -14,7 +14,7 @@ return [
 
     /*
     |--------------------------------------------------------------------------
-    | Default Destination Directory  
+    | Default Destination Directory
     |--------------------------------------------------------------------------
     |
     | The default directory where TypeScript enum files will be generated.
@@ -74,4 +74,4 @@ return [
         ],
         'include_only_enums' => true,
     ],
-]; 
+];

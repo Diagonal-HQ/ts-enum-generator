@@ -1,49 +1,53 @@
 {
-  "name": "diagonal/laravel-ts-enum-generator",
-  "description": "Generate runtime-usable TypeScript enums from PHP Laravel enums.",
-  "type": "library",
-  "license": "MIT",
-  "keywords": [
-    "laravel",
-    "typescript",
-    "enum",
-    "codegen"
-  ],
-  "autoload": {
-    "psr-4": {
-      "Diagonal\\TsEnumGenerator\\": "src/"
-    }
-  },
-  "autoload-dev": {
-    "psr-4": {
-      "Diagonal\\TsEnumGenerator\\Tests\\": "tests/",
-      "Diagonal\\TsEnumGenerator\\Tests\\Fixtures\\": "tests/fixtures/"
-    }
-  },
-  "require": {
-    "php": ">=8.1",
-    "illuminate/support": "^10.0 || ^11.0 || ^12.0",
-    "symfony/finder": "^5.0 || ^6.0 || ^7.0",
-    "nette/php-generator": "^3.6 || ^4.0"
-  },
-  "require-dev": {
-    "phpunit/phpunit": "^9.5 || ^10.0 || ^11.0",
-    "orchestra/testbench": "^7.0 || ^8.0 || ^9.0"
-  },
-  "scripts": {
-    "test": "phpunit"
-  },
-  "extra": {
-    "laravel": {
-      "providers": [
-        "Diagonal\\TsEnumGenerator\\TsEnumGeneratorServiceProvider"
-      ]
-    }
-  },
-  "authors": [
-    {
-      "name": "Branick Weix",
-      "email": "branickw@godiagonal.com"
-    }
-  ]
+    "name": "diagonal/ts-enum-generator",
+    "description": "Generate runtime-usable TypeScript objects and enums from PHP enums with utils ",
+    "keywords": [
+        "diagonal",
+        "ts-enum-generator"
+    ],
+    "homepage": "https://github.com/diagonal/ts-enum-generator",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Branick Weix",
+            "email": "bdweix@gmail.com",
+            "role": "Developer"
+        }
+    ],
+    "require": {
+        "php": "^8.4",
+        "illuminate/support": "^12.21",
+        "nette/php-generator": "^4.1",
+        "symfony/finder": "^7.3"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^10.4",
+        "pestphp/pest": "^3.0",
+        "spatie/ray": "^1.28"
+    },
+    "autoload": {
+        "psr-4": {
+            "Diagonal\\TsEnumGenerator\\": "src"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Diagonal\\TsEnumGenerator\\Tests\\": "tests"
+        }
+    },
+    "scripts": {
+        "test": "vendor/bin/pest",
+            "test-coverage": "vendor/bin/pest --coverage",
+        "format": "vendor/bin/pint"
+    },
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true,
+            "phpstan/extension-installer": true
+        }
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true
 }
