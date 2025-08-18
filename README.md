@@ -1,8 +1,8 @@
 # Generate TypeScript definitions from PHP enums
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/diagonal/ts-enum-generator.svg?style=flat-square)](https://packagist.org/packages/diagonal/ts-enum-generator)
-[![Tests](https://img.shields.io/github/actions/workflow/status/diagonal/ts-enum-generator/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/diagonal/ts-enum-generator/actions/workflows/run-tests.yml)
-[![Total Downloads](https://img.shields.io/packagist/dt/diagonal/ts-enum-generator.svg?style=flat-square)](https://packagist.org/packages/diagonal/ts-enum-generator)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/Diagonal-HQ/ts-enum-generator.svg?style=flat-square)](https://packagist.org/packages/diagonal/ts-enum-generator)
+[![Tests](https://img.shields.io/github/actions/workflow/status/Diagonal-HQ/ts-enum-generator/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/diagonal/ts-enum-generator/actions/workflows/run-tests.yml)
+[![Total Downloads](https://img.shields.io/packagist/dt/Diagonal-HQ/ts-enum-generator.svg?style=flat-square)](https://packagist.org/packages/diagonal/ts-enum-generator)
 
 This package can generate TypeScript definitions from your PHP enums. The generated TypeScript includes type definitions, runtime objects, and utility functions to make working with enums in your frontend applications a breeze.
 
