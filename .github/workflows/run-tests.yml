@@ -22,9 +22,15 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         php: [8.4]
+        laravel: [12, 13]
         stability: [prefer-lowest, prefer-stable]
+        include:
+          - laravel: 12
+            testbench: ^10.4
+          - laravel: 13
+            testbench: ^11.0
 
-    name: P${{ matrix.php }} - ${{ matrix.stability }} - ${{ matrix.os }}
+    name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.stability }} - ${{ matrix.os }}
 
     steps:
       - name: Checkout code
@@ -41,6 +47,9 @@ jobs:
         run: |
           echo "::add-matcher::${{ runner.tool_cache }}/php.json"
           echo "::add-matcher::${{ runner.tool_cache }}/phpunit.json"
+
+      - name: Set Laravel version
+        run: composer require "illuminate/support:^${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-update
 
       - name: Install dependencies
         run: composer update --${{ matrix.stability }} --prefer-dist --no-interaction
