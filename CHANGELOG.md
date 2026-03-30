@@ -2,6 +2,10 @@
 
 All notable changes to `ts-enum-generator` will be documented in this file.
 
+## 0.3.1 - 2026-03-30
+
+**Full Changelog**: https://github.com/Diagonal-HQ/ts-enum-generator/compare/0.3.0...0.3.1
+
 ## 0.3.0 - 2026-03-27
 
 ### What's Changed
