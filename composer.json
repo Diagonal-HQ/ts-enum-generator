@@ -48,6 +48,13 @@
             "phpstan/extension-installer": true
         }
     },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Diagonal\\TsEnumGenerator\\TsEnumGeneratorServiceProvider"
+            ]
+        }
+    },
     "minimum-stability": "dev",
     "prefer-stable": true
 }
