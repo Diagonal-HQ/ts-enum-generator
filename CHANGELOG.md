@@ -2,6 +2,15 @@
 
 All notable changes to `ts-enum-generator` will be documented in this file.
 
+## 0.3.3 - 2026-05-26
+
+### What's Changed
+
+- Reduced the displayed README logo size.
+- Included the generated changelog update from the previous release.
+
+**Full Changelog**: https://github.com/Diagonal-HQ/ts-enum-generator/compare/0.3.2...0.3.3
+
 ## 0.3.2 - 2026-05-26
 
 ### What's Changed
