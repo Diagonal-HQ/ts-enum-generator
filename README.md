@@ -1,10 +1,24 @@
-# Generate TypeScript definitions from PHP enums
+# Diagonal TS Enum Generator
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/Diagonal-HQ/ts-enum-generator.svg?style=flat-square)](https://packagist.org/packages/diagonal/ts-enum-generator)
+![Diagonal](https://pub-051e30c87263412fac314042ff46265a.r2.dev/Website%20Media/DiagonalLogoTrademarkBlack.png)
+
+Downloadable developer software from Diagonal Software Corp. for application development with Laravel, PHP enums, and TypeScript.
+
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/diagonal/ts-enum-generator.svg?style=flat-square)](https://packagist.org/packages/diagonal/ts-enum-generator)
 [![Tests](https://img.shields.io/github/actions/workflow/status/Diagonal-HQ/ts-enum-generator/run-tests.yml?branch=main&label=tests&style=flat-square)](https://github.com/diagonal/ts-enum-generator/actions/workflows/run-tests.yml)
-[![Total Downloads](https://img.shields.io/packagist/dt/Diagonal-HQ/ts-enum-generator.svg?style=flat-square)](https://packagist.org/packages/diagonal/ts-enum-generator)
+[![Total Downloads](https://img.shields.io/packagist/dt/diagonal/ts-enum-generator.svg?style=flat-square)](https://packagist.org/packages/diagonal/ts-enum-generator)
 
-This package can generate TypeScript definitions from your PHP enums. The generated TypeScript includes type definitions, runtime objects, and utility functions to make working with enums in your frontend applications a breeze.
+Diagonal TS Enum Generator is a downloadable computer software development tool distributed as the `diagonal/ts-enum-generator` Composer package. It generates TypeScript definitions from PHP enums so backend and frontend applications can share typed enum contracts.
+
+The generated TypeScript can include type definitions, runtime objects, and utility functions for use in application development, deployment, and management workflows.
+
+## Package details
+
+- **Provider:** Diagonal Software Corp.
+- **Software name:** Diagonal TS Enum Generator
+- **Package:** `diagonal/ts-enum-generator`
+- **Distribution:** Downloadable Composer package via Packagist
+- **Use case:** Computer system and application development with Laravel, PHP, and TypeScript
 
 ## Installation
 
@@ -154,7 +168,7 @@ php artisan ts-enums:generate --source=app/Models/Enums --destination=resources/
 
 ### Configuration options
 
-**Output format**
+### Output format
 
 Control how the TypeScript is generated:
 
@@ -166,7 +180,7 @@ Control how the TypeScript is generated:
 ],
 ```
 
-**Namespace handling**
+### Namespace handling
 
 Customize how PHP namespaces are converted to TypeScript:
 
@@ -179,7 +193,7 @@ Customize how PHP namespaces are converted to TypeScript:
 
 With these settings, `App\Enums\UserRole` becomes `Enums.Types.UserRole`.
 
-**Runtime utilities**
+### Runtime utilities
 
 Choose what utility functions to generate:
 
