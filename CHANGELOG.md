@@ -2,6 +2,15 @@
 
 All notable changes to `ts-enum-generator` will be documented in this file.
 
+## 0.3.2 - 2026-05-26
+
+### What's Changed
+
+- Updated the README with Diagonal branding, the current logo, and public package details for the downloadable Composer package.
+- Fixed Packagist badge package paths in the README.
+
+**Full Changelog**: https://github.com/Diagonal-HQ/ts-enum-generator/compare/0.3.1...0.3.2
+
 ## 0.3.1 - 2026-03-30
 
 **Full Changelog**: https://github.com/Diagonal-HQ/ts-enum-generator/compare/0.3.0...0.3.1
