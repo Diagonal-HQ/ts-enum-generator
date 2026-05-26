@@ -1,6 +1,6 @@
 # Diagonal TS Enum Generator
 
-![Diagonal](https://pub-051e30c87263412fac314042ff46265a.r2.dev/Website%20Media/DiagonalLogoTrademarkBlack.png)
+<img src="https://pub-051e30c87263412fac314042ff46265a.r2.dev/Website%20Media/DiagonalLogoTrademarkBlack.png" alt="Diagonal" width="240">
 
 Downloadable developer software from Diagonal Software Corp. for application development with Laravel, PHP enums, and TypeScript.
 
